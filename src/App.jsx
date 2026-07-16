@@ -28,17 +28,17 @@ function App() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased flex flex-col justify-between">
+    <div className="min-h-screen bg-stone-50 text-stone-800 antialiased flex flex-col justify-between">
       <Header state={state} />
 
       <div className="flex-grow">
         {renderCurrentView()}
       </div>
 
-      <footer className="bg-gray-900 text-gray-500 text-xs py-8 border-t border-gray-800 text-center">
+      <footer className="border-t border-stone-800 bg-stone-950 py-8 text-center text-xs text-stone-500">
         <div className="container mx-auto px-6">
-          <p className="font-bold text-gray-400">© 2026 FASHION STORE. All Rights Reserved.</p>
-          <p className="mt-1 text-[10px]">ระบบจำลองแดชบอร์ดหน้าร้านค้าและจัดการหลังบ้านด้วย React & Tailwind CSS</p>
+          <p className="font-bold tracking-wide text-stone-300">© 2026 FASHION STORE</p>
+          <p className="mt-1 text-[10px]">Curated styles for your everyday.</p>
         </div>
       </footer>
     </div>

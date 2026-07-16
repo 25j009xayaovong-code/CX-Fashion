@@ -425,6 +425,10 @@ export function useAppState() {
                 showAlert('ชื่อผู้ใช้สงวนไว้', 'ชื่อผู้ใช้นี้สงวนไว้สำหรับผู้ดูแลระบบ กรุณาเลือกชื่อผู้ใช้อื่น');
                 return;
             }
+            if (localStorage.getItem(`user_db_${usernameInput.trim()}`)) {
+                showAlert('ไม่สามารถสมัครได้', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่ออื่น');
+                return;
+            }
             localStorage.setItem(`user_db_${usernameInput}`, passwordInput);
             const newProfile = {
                 ...DEFAULT_PROFILE,
@@ -562,7 +566,7 @@ export function useAppState() {
 
     const removeFromCart = (product) => {
         const exist = cart.find(item => item.id === product.id);
-        if (exist.qty === 1) {
+        if (!exist || exist.qty === 1) {
             setCart(cart.filter(item => item.id !== product.id));
         } else {
             setCart(cart.map(item => item.id === product.id ? { ...exist, qty: exist.qty - 1 } : item));
@@ -647,7 +651,7 @@ export function useAppState() {
 
     const handleAddProduct = async (e) => {
         e.preventDefault();
-        if (!newProduct.name || !newProduct.price || !newProduct.stock) {
+        if (!newProduct.name.trim() || newProduct.price === '' || newProduct.stock === '') {
             showAlert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลหลักให้ครบถ้วนด้วยครับ');
             return;
         }
