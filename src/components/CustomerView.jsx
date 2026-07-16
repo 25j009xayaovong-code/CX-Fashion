@@ -13,199 +13,94 @@ function CustomerView({ state }) {
     const [selectedQuantities, setSelectedQuantities] = useState({});
 
     return (
-        <div className="flex-grow">
-            <section className="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-14 px-6 text-center">
-                <div className="max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">SHOP THE LATEST TRENDS</h2>
-                    <p className="text-gray-400 text-sm mb-6 font-medium">ยินดีต้อนรับคุณ {userProfile.displayName}! ค้นหาและช้อปปิ้งออนไลน์ที่นี่</p>
-                    <div className="flex justify-center gap-1.5 flex-wrap">
-                        {allCategoryTabs.map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => setCustomerCategory(cat)}
-                                className={`text-xs px-4 py-2 rounded-full transition-all duration-200 ${customerCategory === cat ? 'bg-white text-gray-900 font-black shadow-sm' : 'bg-white/10 hover:bg-white/20 text-white font-medium'}`}
-                            >
-                                {cat}
-                            </button>
-                        ))}
+        <div className="flex-grow bg-stone-50">
+            <section className="store-hero px-5 py-12 sm:px-8 sm:py-16">
+                <div className="mx-auto grid max-w-6xl items-end gap-10 lg:grid-cols-[1fr_auto]">
+                    <div>
+                        <p className="mb-4 text-xs font-bold uppercase tracking-[0.24em] text-amber-200">New season / curated essentials</p>
+                        <h2 className="max-w-2xl text-4xl font-black leading-[0.95] tracking-[-0.045em] text-white sm:text-6xl">Style that feels<br /><em className="font-serif font-normal text-amber-200">like you.</em></h2>
+                        <p className="mt-6 max-w-lg text-sm leading-6 text-stone-300">สวัสดีคุณ {userProfile.displayName} — เลือกไอเท็มที่ใช่สำหรับทุกวันของคุณ</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-right backdrop-blur-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-300">Free shipping</p>
+                        <p className="mt-1 text-sm font-bold text-white">เมื่อสั่งซื้อครบ ฿1,500</p>
                     </div>
                 </div>
             </section>
 
-            <main className="container mx-auto px-6 py-12">
-                <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xl font-extrabold text-gray-950">รายการหมวดหมู่: <span className="text-blue-600">{customerCategory}</span></h3>
+            <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
+                <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Shop by category</p>
+                        <h3 className="mt-2 text-2xl font-black tracking-tight text-stone-950 sm:text-3xl">เลือกสิ่งที่เป็นคุณ</h3>
+                    </div>
+                    <p className="text-sm text-stone-500">พบ {filteredProductsForCustomer.length} รายการ</p>
+                </div>
+
+                <div className="category-rail mb-10 flex gap-2 overflow-x-auto pb-2">
+                    {allCategoryTabs.map(cat => (
+                        <button key={cat} onClick={() => setCustomerCategory(cat)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition ${customerCategory === cat ? 'bg-stone-950 text-white shadow-lg shadow-stone-900/15' : 'border border-stone-200 bg-white text-stone-600 hover:border-stone-400 hover:text-stone-950'}`}>
+                            {cat}
+                        </button>
+                    ))}
                 </div>
 
                 {filteredProductsForCustomer.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-250">
-                        <p className="text-gray-450 text-sm">ไม่พบรายการสินค้าที่คุณกำลังตามหา</p>
+                    <div className="rounded-3xl border border-dashed border-stone-300 bg-white py-20 text-center">
+                        <p className="text-3xl">⌕</p>
+                        <p className="mt-3 text-sm font-semibold text-stone-600">ไม่พบสินค้าที่กำลังตามหา</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
                         {filteredProductsForCustomer.map((product) => {
                             const isOutOfStock = product.stock <= 0;
                             const quantityInCart = cart.find((item) => item.id === product.id)?.qty || 0;
                             const availableToAdd = Math.max(0, product.stock - quantityInCart);
                             const selectedQuantity = Math.min(selectedQuantities[product.id] || 1, Math.max(1, availableToAdd));
                             return (
-                                <div key={product.id} className="bg-white rounded-xl shadow-xs border border-gray-150 overflow-hidden hover:shadow-md transition duration-300 flex flex-col justify-between">
-                                    <div className="relative bg-gray-100 h-72">
-                                        <img src={product.img} alt={product.name} className={`w-full h-full object-cover ${isOutOfStock ? 'opacity-40 grayscale' : ''}`} />
-                                        <span className="absolute top-3 left-3 bg-black/75 text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider uppercase">{product.category}</span>
-                                        {isOutOfStock && <span className="absolute inset-0 m-auto h-10 w-28 bg-red-600 text-white text-xs font-black rounded-lg flex items-center justify-center shadow-md">หมดคลังชั่วคราว</span>}
+                                <article key={product.id} className="product-card group flex flex-col">
+                                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-stone-200">
+                                        <img src={product.img} alt={product.name} className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${isOutOfStock ? 'grayscale opacity-40' : ''}`} />
+                                        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-stone-900 backdrop-blur">{product.category}</span>
+                                        {isOutOfStock && <span className="absolute inset-0 m-auto flex h-10 w-28 items-center justify-center rounded-full bg-stone-950 text-[10px] font-bold text-white">สินค้าหมด</span>}
                                     </div>
-                                    <div className="p-5 flex-1 flex flex-col justify-between">
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 text-sm mb-1 line-clamp-2">{product.name}</h4>
-                                            <p className="text-[11px] text-gray-400 mb-3">คงเหลือในร้าน: {product.stock} ชิ้น</p>
+                                    <div className="px-1 pt-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <h4 className="min-h-10 text-sm font-bold leading-5 text-stone-900 line-clamp-2">{product.name}</h4>
+                                            <span className="whitespace-nowrap text-base font-black text-stone-950">฿{product.price.toLocaleString()}</span>
                                         </div>
-                                        <div className="flex justify-between items-center gap-2 pt-2 border-t border-gray-50">
-                                            <span className="text-lg font-black text-gray-950">฿{product.price.toLocaleString()}</span>
-                                            <div className="flex items-center gap-1.5">
-                                                <select
-                                                    value={selectedQuantity}
-                                                    onChange={(e) => setSelectedQuantities((quantities) => ({ ...quantities, [product.id]: Number(e.target.value) }))}
-                                                    disabled={availableToAdd === 0}
-                                                    aria-label={`เลือกจำนวน ${product.name}`}
-                                                    className="w-14 rounded-lg border border-gray-200 bg-white px-1.5 py-2 text-xs font-bold text-gray-700 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-                                                >
-                                                    {Array.from({ length: availableToAdd }, (_, index) => index + 1).map((quantity) => (
-                                                        <option key={quantity} value={quantity}>{quantity}</option>
-                                                    ))}
-                                                </select>
-                                                <button onClick={() => addToCart(product, selectedQuantity)} disabled={isOutOfStock || availableToAdd === 0} className={`px-3.5 py-2 rounded-lg text-xs font-bold transition ${isOutOfStock || availableToAdd === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
-                                                {isOutOfStock ? 'หมด' : 'ใส่ตะกร้า'}
-                                                </button>
-                                            </div>
+                                        <p className={`mt-1 text-[11px] font-medium ${product.stock <= 3 ? 'text-amber-700' : 'text-stone-400'}`}>เหลือ {product.stock} ชิ้น {product.stock <= 3 && product.stock > 0 ? '· ใกล้หมด' : ''}</p>
+                                        <div className="mt-4 flex gap-2">
+                                            <select value={selectedQuantity} onChange={(e) => setSelectedQuantities((quantities) => ({ ...quantities, [product.id]: Number(e.target.value) }))} disabled={availableToAdd === 0} aria-label={`เลือกจำนวน ${product.name}`} className="w-14 rounded-xl border border-stone-200 bg-white px-1.5 py-2.5 text-xs font-bold text-stone-700 focus:border-stone-950 focus:outline-none disabled:cursor-not-allowed disabled:bg-stone-100">
+                                                {Array.from({ length: availableToAdd }, (_, index) => index + 1).map((quantity) => <option key={quantity} value={quantity}>{quantity}</option>)}
+                                            </select>
+                                            <button onClick={() => addToCart(product, selectedQuantity)} disabled={isOutOfStock || availableToAdd === 0} className={`flex-1 rounded-xl px-3 py-2.5 text-xs font-bold transition ${isOutOfStock || availableToAdd === 0 ? 'cursor-not-allowed bg-stone-100 text-stone-400' : 'bg-stone-950 text-white hover:bg-amber-700'}`}>
+                                                {isOutOfStock ? 'หมดแล้ว' : 'เพิ่มลงตะกร้า'}
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
+                                </article>
                             );
                         })}
                     </div>
                 )}
             </main>
 
-            {/* Cart Drawer */}
             {isCartOpen && (
                 <div className="fixed inset-0 z-50 overflow-hidden">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-xs" onClick={() => setIsCartOpen(false)}></div>
-                    <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-                        <div className="w-screen max-w-md bg-white shadow-xl flex flex-col">
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-55/10">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-base font-extrabold text-gray-900">🛒 ตะกร้าของฉัน ({cart.reduce((sum, i) => sum + i.qty, 0)})</h3>
-                                    {cart.length > 0 && (
-                                        <button onClick={clearCart} className="text-[10px] font-bold text-red-500 hover:text-red-700">ล้างตะกร้า</button>
-                                    )}
+                    <div className="absolute inset-0 bg-stone-950/45 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
+                    <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-stone-200 px-6 py-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Your bag</p><h3 className="mt-1 text-lg font-black text-stone-950">ตะกร้าของฉัน ({cart.reduce((sum, i) => sum + i.qty, 0)})</h3></div><button onClick={() => setIsCartOpen(false)} className="rounded-full p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-950" aria-label="ปิดตะกร้า">✕</button></div>
+                        <div className="flex-1 overflow-y-auto px-6 py-5">
+                            {cart.length === 0 ? <div className="py-20 text-center"><p className="text-3xl">🛍️</p><p className="mt-3 text-sm font-semibold text-stone-600">ตะกร้าของคุณยังว่าง</p><button onClick={() => setIsCartOpen(false)} className="mt-4 text-xs font-bold text-amber-700 underline underline-offset-4">เลือกซื้อสินค้า</button></div> : <>
+                                <div className="space-y-4 border-b border-stone-200 pb-5">{cart.map((item) => <div key={item.id} className="flex gap-3"><img src={item.img} alt={item.name} className="h-16 w-14 rounded-xl object-cover" /><div className="min-w-0 flex-1"><h5 className="text-xs font-bold leading-5 text-stone-900 line-clamp-1">{item.name}</h5><p className="mt-1 text-xs font-black text-stone-950">฿{item.price.toLocaleString()}</p></div><div className="flex h-8 items-center overflow-hidden rounded-lg border border-stone-200"><button onClick={() => removeFromCart(item)} className="px-2 text-sm text-stone-600">−</button><span className="px-1 text-xs font-bold">{item.qty}</span><button onClick={() => addToCart(item)} className="px-2 text-sm text-stone-600">+</button></div></div>)}</div>
+                                <div className="space-y-4 py-5"><div className="rounded-2xl bg-stone-100 p-3.5"><div className="mb-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-stone-600"><span>โค้ดส่วนลด</span>{appliedCoupon && <button onClick={removeCoupon} className="text-red-600">ลบ</button>}</div>{appliedCoupon ? <p className="text-xs font-bold text-emerald-700">{appliedCoupon.label} ถูกเลือกแล้ว</p> : <div className="flex gap-2"><input type="text" value={couponCodeInput} onChange={(e) => setCouponCodeInput(e.target.value)} placeholder="SAVE10" className="min-w-0 flex-1 rounded-lg border-0 bg-white px-3 py-2 text-xs focus:ring-1 focus:ring-stone-950" /><button onClick={applyCoupon} className="rounded-lg bg-stone-950 px-3 text-[10px] font-bold text-white">ใช้</button></div>}{couponFeedback && <p className="mt-2 text-[10px] text-stone-500">{couponFeedback}</p>}</div>
+                                    <div><p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Delivery details</p><div className="space-y-3"><input type="text" required value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} placeholder="ชื่อผู้รับสินค้า *" className="checkout-input" /><div className="grid grid-cols-2 gap-3"><input type="text" required value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} placeholder="เบอร์โทร *" className="checkout-input" /><select value={checkoutPayment} onChange={(e) => setCheckoutPayment(e.target.value)} className="checkout-input"><option value="bank">โอนเงิน</option><option value="card">บัตรเครดิต</option><option value="wallet">TrueMoney</option></select></div><textarea required rows="2" value={checkoutAddress} onChange={(e) => setCheckoutAddress(e.target.value)} placeholder="ที่อยู่จัดส่ง *" className="checkout-input resize-none" /></div></div>
                                 </div>
-                                <button onClick={() => setIsCartOpen(false)} className="text-gray-400 hover:text-gray-500">
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                {cart.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-400 text-xs">
-                                        <p className="mb-2">ไม่มีสินค้าใดๆ อยู่ในตะกร้า</p>
-                                        <button onClick={() => setIsCartOpen(false)} className="text-blue-600 font-bold hover:underline">ไปช้อปปิ้งเพิ่ม</button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="space-y-4 pb-4 border-b border-gray-100">
-                                            {cart.map((item) => (
-                                                <div key={item.id} className="flex items-center justify-between">
-                                                    <img src={item.img} alt={item.name} className="w-12 h-12 object-cover rounded-md bg-gray-100 flex-shrink-0" />
-                                                    <div className="flex-1 ml-4 pr-2">
-                                                        <h5 className="text-xs font-bold text-gray-900 line-clamp-1">{item.name}</h5>
-                                                        <p className="text-[10px] text-gray-400 mt-0.5">฿{item.price.toLocaleString()} x {item.qty}</p>
-                                                    </div>
-                                                    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
-                                                        <button onClick={() => removeFromCart(item)} className="px-2 py-0.5 bg-gray-50 hover:bg-gray-100 font-bold text-xs">-</button>
-                                                        <span className="px-2 text-xs font-semibold">{item.qty}</span>
-                                                        <button onClick={() => addToCart(item)} className="px-2 py-0.5 bg-gray-50 hover:bg-gray-100 font-bold text-xs">+</button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        <div className="space-y-4 pt-2">
-                                            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-wider">🎫 คูปองส่วนลด</span>
-                                                    {appliedCoupon && (
-                                                        <button onClick={removeCoupon} className="text-[10px] font-bold text-red-500">ลบคูปอง</button>
-                                                    )}
-                                                </div>
-                                                {appliedCoupon ? (
-                                                    <p className="text-[11px] font-semibold text-emerald-600">{appliedCoupon.label} จะถูกใช้ในคำสั่งซื้อนี้</p>
-                                                ) : (
-                                                    <div className="flex gap-2">
-                                                        <input type="text" value={couponCodeInput} onChange={(e) => setCouponCodeInput(e.target.value)} placeholder="SAVE10 / SAVE15 / FREESHIP" className="flex-1 px-3 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none" />
-                                                        <button onClick={applyCoupon} className="px-3 py-2 bg-gray-900 text-white text-[10px] font-bold rounded-lg">ใช้คูปอง</button>
-                                                    </div>
-                                                )}
-                                                {couponFeedback && <p className="text-[10px] text-gray-500">{couponFeedback}</p>}
-                                            </div>
-
-                                            <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">📍 รายละเอียดการจัดส่งและการชำระเงิน</h4>
-                                            <div>
-                                                <label className="block text-[10px] font-semibold text-gray-400 mb-1">ชื่อ-นามสกุล ผู้รับเงิน/ของ *</label>
-                                                <input type="text" required value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} placeholder="กรอกชื่อเพื่อส่งของ..." className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none" />
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="block text-[10px] font-semibold text-gray-400 mb-1">เบอร์โทรศัพท์มือถือ *</label>
-                                                    <input type="text" required value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} placeholder="เช่น 0891234567" className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-semibold text-gray-400 mb-1">วิธีการชำระเงิน *</label>
-                                                    <select value={checkoutPayment} onChange={(e) => setCheckoutPayment(e.target.value)} className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none bg-white">
-                                                        <option value="bank">โอนเข้าบัญชีธนาคาร</option>
-                                                        <option value="card">บัตรเครดิต</option>
-                                                        <option value="wallet">TrueMoney Wallet</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-semibold text-gray-400 mb-1">ที่จัดส่งสินค้าโดยละเอียด *</label>
-                                                <textarea required rows="2" value={checkoutAddress} onChange={(e) => setCheckoutAddress(e.target.value)} placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ..." className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none bg-white"></textarea>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="p-6 border-t border-gray-100 bg-gray-50">
-                                <div className="space-y-2 text-xs font-semibold text-gray-700 mb-4">
-                                    <div className="flex justify-between">
-                                        <span>ยอดรวมสินค้า</span>
-                                        <span>฿{cartSubtotal.toLocaleString()}</span>
-                                    </div>
-                                    {discountAmount > 0 && (
-                                        <div className="flex justify-between text-emerald-600">
-                                            <span>ส่วนลด</span>
-                                            <span>-฿{discountAmount.toLocaleString()}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between">
-                                        <span>ค่าจัดส่ง</span>
-                                        <span>{shippingFee === 0 ? 'ฟรี' : `฿${shippingFee.toLocaleString()}`}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-gray-200">
-                                        <span>ยอดสุทธิ</span>
-                                        <span className="text-lg text-blue-600">฿{grandTotal.toLocaleString()}</span>
-                                    </div>
-                                </div>
-                                <button onClick={handleCheckout} disabled={cart.length === 0} className={`w-full py-2.5 rounded-xl font-bold text-center text-xs shadow-md transition ${cart.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-950 text-white hover:bg-gray-800'}`}>
-                                    ชำระเงินและส่งคำสั่งซื้อจำลอง
-                                </button>
-                            </div>
+                            </>}
                         </div>
-                    </div>
+                        <div className="border-t border-stone-200 bg-stone-50 px-6 py-5"><div className="mb-4 space-y-2 text-xs text-stone-600"><div className="flex justify-between"><span>ยอดรวมสินค้า</span><span>฿{cartSubtotal.toLocaleString()}</span></div>{discountAmount > 0 && <div className="flex justify-between text-emerald-700"><span>ส่วนลด</span><span>-฿{discountAmount.toLocaleString()}</span></div>}<div className="flex justify-between"><span>จัดส่ง</span><span>{shippingFee === 0 ? 'ฟรี' : `฿${shippingFee.toLocaleString()}`}</span></div><div className="flex justify-between border-t border-stone-200 pt-3 text-base font-black text-stone-950"><span>ยอดสุทธิ</span><span>฿{grandTotal.toLocaleString()}</span></div></div><button onClick={handleCheckout} disabled={cart.length === 0} className="w-full rounded-xl bg-stone-950 py-3 text-xs font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-stone-300">ยืนยันคำสั่งซื้อ</button>{cart.length > 0 && <button onClick={clearCart} className="mt-3 w-full text-[10px] font-bold text-stone-400 hover:text-red-600">ล้างตะกร้า</button>}</div>
+                    </aside>
                 </div>
             )}
         </div>

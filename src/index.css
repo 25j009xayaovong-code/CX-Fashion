@@ -1,6 +1,38 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+    font-family: Inter, "Noto Sans Thai", "Sukhumvit Set", system-ui, sans-serif;
+    color: #1c1917;
+    background: #fafaf9;
+}
+
+* { box-sizing: border-box; }
+
+button, input, select, textarea { font: inherit; }
+
+.store-hero {
+    position: relative;
+    overflow: hidden;
+    background: #1c1917;
+}
+
+.store-hero::after {
+    content: "";
+    position: absolute;
+    width: 32rem;
+    height: 32rem;
+    right: -12rem;
+    top: -17rem;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(217, 119, 6, .5), transparent 67%);
+    pointer-events: none;
+}
+
+.store-hero > div { position: relative; z-index: 1; }
+.category-rail { scrollbar-width: none; }
+.category-rail::-webkit-scrollbar { display: none; }
+.checkout-input { width: 100%; border: 1px solid #e7e5e4; border-radius: .75rem; background: white; padding: .65rem .75rem; font-size: .75rem; color: #292524; outline: none; }
+.checkout-input:focus { border-color: #292524; box-shadow: 0 0 0 2px rgba(41, 37, 36, .1); }
 
 /* เพิ่ม animation ที่ใช้ใน SellerView */
 @keyframes fadeIn {
