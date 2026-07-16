@@ -125,8 +125,8 @@ function SellerView({ state }) {
                         <button type="button" onClick={returnToDashboard} className="text-xs font-bold text-gray-600 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50">← กลับ</button>
                     </div>
                     <form onSubmit={handleCreateAdmin} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input type="text" required minLength="3" value={newAdminUsername} onChange={(e) => setNewAdminUsername(e.target.value)} placeholder="ชื่อผู้ดูแลใหม่" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
-                        <input type="password" required minLength="4" value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} placeholder="รหัสผ่าน" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                        <input type="email" required value={newAdminUsername} onChange={(e) => setNewAdminUsername(e.target.value)} placeholder="อีเมลผู้ดูแลใหม่" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                        <input type="password" required minLength="6" value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} placeholder="รหัสผ่าน 6 ตัวขึ้นไป" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                         <button type="submit" className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs transition">เพิ่มผู้ดูแล</button>
                     </form>
                     {adminAccounts.length > 0 && (

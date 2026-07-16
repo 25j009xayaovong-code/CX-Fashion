@@ -1,70 +1,9 @@
 import { useState, useEffect } from 'react';
-import { DEFAULT_PRODUCTS, DEFAULT_PROFILE } from '../utils/constants';
+import { DEFAULT_PROFILE } from '../utils/constants';
 import { convertFileToBase64, generateOrderId, convertThaiDateToISO } from '../utils/helpers';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 export function useAppState() {
-    const SPECIAL_ADMIN_USERNAME = 'Rin';
-    const SPECIAL_ADMIN_EMAIL = 'rin@example.com';
-    const SPECIAL_ADMIN_PASSWORD = '1234';
-
-    const isSpecialAdminCredential = (value, password) => {
-        const normalized = String(value || '').trim().toLowerCase();
-        return (normalized === SPECIAL_ADMIN_USERNAME.toLowerCase() || normalized === SPECIAL_ADMIN_EMAIL.toLowerCase())
-            && String(password || '') === SPECIAL_ADMIN_PASSWORD;
-    };
-
-    const getSpecialAdminProfile = () => ({
-        ...DEFAULT_PROFILE,
-        displayName: SPECIAL_ADMIN_USERNAME,
-        email: SPECIAL_ADMIN_EMAIL,
-        phone: '081-111-2222',
-        address: '123/4 ถ.สุขุมวิท แขวงคลองตัน กรุงเทพฯ 10110',
-        defaultPayment: 'bank'
-    });
-
-    const getStoredProfile = (username) => {
-        if (!username) return DEFAULT_PROFILE;
-        try {
-            const item = localStorage.getItem(`fashion_profile_${username}`);
-            if (item) {
-                const parsed = JSON.parse(item);
-                return { ...DEFAULT_PROFILE, ...parsed };
-            }
-        } catch (error) {
-            console.error('Failed to load profile:', error);
-        }
-        return DEFAULT_PROFILE;
-    };
-
-    const saveUserProfile = (username, profile) => {
-        if (!username) return;
-        localStorage.setItem(`fashion_profile_${username}`, JSON.stringify(profile));
-    };
-
-    const getStoredCustomerAccounts = () => {
-        try {
-            const storedAdmins = JSON.parse(localStorage.getItem('fashion_admin_accounts') || '[]');
-            const adminUsernames = new Set([
-                SPECIAL_ADMIN_USERNAME.toLowerCase(),
-                ...storedAdmins.map((account) => account.username.toLowerCase())
-            ]);
-
-            return Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
-                .filter((key) => key?.startsWith('user_db_'))
-                .map((key) => key.slice('user_db_'.length))
-                .filter((username) => !adminUsernames.has(username.toLowerCase()))
-                .map((username) => {
-                    const profile = getStoredProfile(username);
-                    return {
-                        username,
-                        displayName: profile.displayName || username,
-                        email: profile.email || ''
-                    };
-                });
-        } catch {
-            return [];
-        }
-    };
 
     // --- Local Storage Helpers ---
     const useLocalStorage = (key, initialValue) => {
@@ -85,13 +24,13 @@ export function useAppState() {
     };
 
     // --- States ---
-    const [products, setProducts] = useLocalStorage('fashion_products', DEFAULT_PRODUCTS);
+    const [products, setProducts] = useState([]);
     const [cart, setCart] = useLocalStorage('fashion_cart', []);
-    const [orders, setOrders] = useLocalStorage('fashion_orders', []);
-    const [currentUser, setCurrentUser] = useLocalStorage('fashion_user', null);
-    const [userProfile, setUserProfile] = useLocalStorage('fashion_profile', DEFAULT_PROFILE);
-    const [adminAccounts, setAdminAccounts] = useLocalStorage('fashion_admin_accounts', []);
-    const [customerAccounts, setCustomerAccounts] = useLocalStorage('fashion_customer_accounts', getStoredCustomerAccounts());
+    const [orders, setOrders] = useState([]);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [userProfile, setUserProfile] = useState(DEFAULT_PROFILE);
+    const [adminAccounts, setAdminAccounts] = useState([]);
+    const [customerAccounts, setCustomerAccounts] = useState([]);
 
     // --- UI States ---
     const [viewMode, setViewMode] = useState('customer');
@@ -222,41 +161,72 @@ export function useAppState() {
     };
 
     const customerOrders = orders.filter(order => {
-        if (currentUser?.username) {
-            return order.username === currentUser.username;
+        if (currentUser?.id) {
+            return order.username === currentUser.id;
         }
         return order.username === 'guest' || order.buyer === userProfile.displayName;
     });
 
-    // --- Effects ---
-    useEffect(() => {
-        if (!currentUser?.username) {
-            const resetProfile = { ...DEFAULT_PROFILE };
-            setUserProfile(resetProfile);
-            setSettingsForm(resetProfile);
-            setCheckoutName(resetProfile.displayName);
-            setCheckoutPhone(resetProfile.phone);
-            setCheckoutAddress(resetProfile.address);
-            setCheckoutPayment(resetProfile.defaultPayment);
+    // --- Supabase data loading ---
+    const toProduct = (product) => ({ ...product, img: product.image_url });
+    const toProfile = (profile) => ({
+        displayName: profile.display_name,
+        email: profile.email || '',
+        phone: profile.phone || '',
+        address: profile.address || '',
+        defaultPayment: profile.default_payment || 'bank'
+    });
+    const refreshStore = async () => {
+        if (!supabase) return;
+        const [{ data: productData, error: productError }, { data: orderData, error: orderError }] = await Promise.all([
+            supabase.from('products').select('*').order('id'),
+            supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false })
+        ]);
+        if (productError || orderError) {
+            showAlert('โหลดข้อมูลไม่สำเร็จ', productError?.message || orderError?.message || 'กรุณาลองใหม่อีกครั้ง');
             return;
         }
-
-        const profile = getStoredProfile(currentUser.username);
-        setUserProfile(profile);
-        setSettingsForm({ ...profile });
-        setCheckoutName(profile.displayName);
-        setCheckoutPhone(profile.phone);
-        setCheckoutAddress(profile.address);
-        setCheckoutPayment(profile.defaultPayment);
-    }, [currentUser?.username, setUserProfile]);
-
+        setProducts((productData || []).map(toProduct));
+        setOrders((orderData || []).map((order) => ({
+            orderId: order.order_number,
+            date: new Date(order.created_at).toLocaleDateString('th-TH'),
+            time: new Date(order.created_at).toLocaleTimeString('th-TH'),
+            buyer: order.buyer, username: order.user_id, contact: order.contact, address: order.address,
+            payment: order.payment, subtotal: order.subtotal, discountAmount: order.discount_amount,
+            shippingFee: order.shipping_fee, coupon: order.coupon, couponLabel: order.coupon_label, total: order.total,
+            items: (order.order_items || []).map((item) => ({ id: item.product_id, name: item.name, price: item.price, qty: item.quantity, img: item.image_url }))
+        })));
+    };
+    const loadAccount = async (user) => {
+        if (!supabase || !user) return;
+        const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (error) { showAlert('ไม่พบโปรไฟล์', error.message); return; }
+        const nextProfile = toProfile(profile);
+        setCurrentUser({ id: user.id, username: profile.username, email: user.email, isAdmin: profile.role === 'admin' });
+        setUserProfile(nextProfile);
+        setSettingsForm(nextProfile);
+        setCheckoutName(nextProfile.displayName);
+        setCheckoutPhone(nextProfile.phone);
+        setCheckoutAddress(nextProfile.address);
+        setCheckoutPayment(nextProfile.defaultPayment);
+        if (profile.role === 'admin') {
+            const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+            setAdminAccounts((profiles || []).filter((account) => account.role === 'admin').map((account) => ({ username: account.username })));
+            setCustomerAccounts((profiles || []).filter((account) => account.role !== 'admin').map((account) => ({ username: account.username, displayName: account.display_name, email: account.email })));
+        }
+    };
     useEffect(() => {
-        setSettingsForm({ ...userProfile });
-        setCheckoutName(userProfile.displayName);
-        setCheckoutPhone(userProfile.phone);
-        setCheckoutAddress(userProfile.address);
-        setCheckoutPayment(userProfile.defaultPayment);
-    }, [userProfile]);
+        if (!isSupabaseConfigured) return;
+        refreshStore();
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) loadAccount(session.user);
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) loadAccount(session.user);
+            else { setCurrentUser(null); setUserProfile(DEFAULT_PROFILE); setSettingsForm(DEFAULT_PROFILE); }
+        });
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (viewMode !== 'seller') {
@@ -274,7 +244,7 @@ export function useAppState() {
 
         if (!isAdminUser) {
             setViewMode('customer');
-            showAlert('จำกัดสิทธิ์', 'ต้องล็อกอินด้วยบัญชี Rin หรืออีเมล Rin และรหัสผ่าน 1234 เพื่อเข้าใช้งานหน้าจัดการระบบ');
+            showAlert('จำกัดสิทธิ์', 'กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับสิทธิ์ผู้ดูแลระบบ');
         }
     }, [currentUser?.username, currentUser?.isAdmin, viewMode]);
 
@@ -345,47 +315,24 @@ export function useAppState() {
         showAlert('ลบคูปองแล้ว', 'โค้ดส่วนลดถูกลบออกจากคำสั่งซื้อนี้แล้ว');
     };
 
-    const findAdditionalAdmin = (value, password) => {
-        const normalized = String(value || '').trim().toLowerCase();
-        return adminAccounts.find((account) => (
-            account.username.toLowerCase() === normalized
-            && account.password === String(password || '')
-        ));
-    };
-
-    const handleCreateAdmin = (e) => {
+    const handleCreateAdmin = async (e) => {
         e.preventDefault();
         if (currentUser?.isAdmin !== true) {
             showAlert('ไม่มีสิทธิ์', 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถเพิ่มบัญชีผู้ดูแลได้');
             return;
         }
 
-        const username = newAdminUsername.trim();
+        const username = newAdminUsername.trim().toLowerCase();
         const password = newAdminPassword;
-        const normalizedUsername = username.toLowerCase();
-        if (username.length < 3 || password.length < 4) {
-            showAlert('ข้อมูลไม่ครบถ้วน', 'ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร และรหัสผ่านอย่างน้อย 4 ตัวอักษร');
+        if (!username.includes('@') || password.length < 6) {
+            showAlert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกอีเมล และรหัสผ่านอย่างน้อย 6 ตัวอักษร');
             return;
         }
-        if (normalizedUsername === SPECIAL_ADMIN_USERNAME.toLowerCase() || normalizedUsername === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-            showAlert('ชื่อผู้ใช้สงวนไว้', 'ชื่อผู้ใช้นี้เป็นบัญชีผู้ดูแลหลักของระบบ');
-            return;
-        }
-        if (adminAccounts.some((account) => account.username.toLowerCase() === normalizedUsername) || localStorage.getItem(`user_db_${username}`)) {
-            showAlert('ไม่สามารถเพิ่มบัญชีได้', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่ออื่น');
-            return;
-        }
-
-        const profile = {
-            ...DEFAULT_PROFILE,
-            displayName: username,
-            email: `${username}@example.com`
-        };
-        setAdminAccounts((accounts) => [...accounts, { username, password }]);
-        localStorage.setItem(`user_db_${username}`, password);
-        saveUserProfile(username, profile);
+        const { error } = await supabase.functions.invoke('create-admin', { body: { email: username, password, displayName: username.split('@')[0] } });
+        if (error) { showAlert('เพิ่มผู้ดูแลไม่สำเร็จ', error.message); return; }
         setNewAdminUsername('');
         setNewAdminPassword('');
+        await loadAccount({ id: currentUser.id, email: currentUser.email });
         showAlert('เพิ่มผู้ดูแลสำเร็จ', `บัญชี "${username}" สามารถเข้าสู่หน้าแดชบอร์ดได้แล้ว`);
     };
 
@@ -402,116 +349,38 @@ export function useAppState() {
         showConfirm(
             'ยืนยันการลบบัญชีผู้ดูแล',
             `คุณต้องการลบบัญชีผู้ดูแล "${username}" ใช่หรือไม่? บัญชีนี้จะไม่สามารถเข้าสู่แดชบอร์ดได้อีก`,
-            () => {
-                setAdminAccounts((accounts) => accounts.filter((account) => account.username !== username));
-                localStorage.removeItem(`user_db_${username}`);
-                localStorage.removeItem(`fashion_profile_${username}`);
+            async () => {
+                const { error } = await supabase.functions.invoke('delete-admin', { body: { username } });
+                if (error) { showAlert('ลบบัญชีไม่สำเร็จ', error.message); return; }
+                await loadAccount({ id: currentUser.id, email: currentUser.email });
                 showAlert('ลบบัญชีสำเร็จ', `ลบบัญชีผู้ดูแล "${username}" เรียบร้อยแล้ว`);
             }
         );
     };
 
     // --- Auth ---
-    const handleAuthSubmit = (e) => {
+    const handleAuthSubmit = async (e) => {
         e.preventDefault();
         if (!usernameInput || !passwordInput) {
             showAlert('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วนด้วยนะครับ');
             return;
         }
-
-        if (authMode === 'signup') {
-            const normalizedUsername = usernameInput.trim().toLowerCase();
-            if (normalizedUsername === SPECIAL_ADMIN_USERNAME.toLowerCase() || normalizedUsername === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-                showAlert('ชื่อผู้ใช้สงวนไว้', 'ชื่อผู้ใช้นี้สงวนไว้สำหรับผู้ดูแลระบบ กรุณาเลือกชื่อผู้ใช้อื่น');
-                return;
-            }
-            if (localStorage.getItem(`user_db_${usernameInput.trim()}`)) {
-                showAlert('ไม่สามารถสมัครได้', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่ออื่น');
-                return;
-            }
-            localStorage.setItem(`user_db_${usernameInput}`, passwordInput);
-            const newProfile = {
-                ...DEFAULT_PROFILE,
-                displayName: usernameInput,
-                email: `${usernameInput}@example.com`
-            };
-            saveUserProfile(usernameInput, newProfile);
-            setCustomerAccounts((accounts) => {
-                const normalizedUsername = usernameInput.trim().toLowerCase();
-                const withoutExisting = accounts.filter((account) => account.username.toLowerCase() !== normalizedUsername);
-                return [...withoutExisting, {
-                    username: usernameInput,
-                    displayName: newProfile.displayName,
-                    email: newProfile.email
-                }];
-            });
-            setCurrentUser({ username: usernameInput });
-            setUserProfile(newProfile);
-            setSettingsForm({ ...newProfile });
-            setCheckoutName(newProfile.displayName);
-            setCheckoutPhone(newProfile.phone);
-            setCheckoutAddress(newProfile.address);
-            setCheckoutPayment(newProfile.defaultPayment);
-            setIsAuthOpen(false);
-            setUsernameInput('');
-            setPasswordInput('');
-            setAuthMode('login');
-            showAlert('สมัครสมาชิกสำเร็จ', 'บัญชีจำลองพร้อมใช้งานแล้วครับ!');
-        } else {
-            const additionalAdmin = findAdditionalAdmin(usernameInput, passwordInput);
-            if (isSpecialAdminCredential(usernameInput, passwordInput) || additionalAdmin) {
-                const isPrimaryAdmin = !additionalAdmin;
-                const adminUsername = isPrimaryAdmin ? SPECIAL_ADMIN_USERNAME : additionalAdmin.username;
-                const adminProfile = isPrimaryAdmin
-                    ? getSpecialAdminProfile()
-                    : getStoredProfile(adminUsername);
-                if (isPrimaryAdmin) {
-                    localStorage.setItem(`user_db_${SPECIAL_ADMIN_USERNAME}`, SPECIAL_ADMIN_PASSWORD);
-                    saveUserProfile(SPECIAL_ADMIN_USERNAME, adminProfile);
-                }
-                setCurrentUser({ username: adminUsername, isAdmin: true, email: adminProfile.email });
-                setUserProfile(adminProfile);
-                setSettingsForm({ ...adminProfile });
-                setCheckoutName(adminProfile.displayName);
-                setCheckoutPhone(adminProfile.phone);
-                setCheckoutAddress(adminProfile.address);
-                setCheckoutPayment(adminProfile.defaultPayment);
-                setViewMode('seller');
-                setIsOrderViewOpen(false);
-                setIsAuthOpen(false);
-                setUsernameInput('');
-                setPasswordInput('');
-                setAuthMode('login');
-                showAlert('เข้าสู่ระบบสำเร็จ', `ยินดีต้อนรับกลับมาครับ คุณ ${adminUsername}!`);
-                return;
-            }
-
-            const savedPassword = localStorage.getItem(`user_db_${usernameInput}`);
-            if (savedPassword && savedPassword === passwordInput) {
-                const profile = getStoredProfile(usernameInput);
-                setCurrentUser({ username: usernameInput });
-                setUserProfile(profile);
-                setSettingsForm({ ...profile });
-                setCheckoutName(profile.displayName);
-                setCheckoutPhone(profile.phone);
-                setCheckoutAddress(profile.address);
-                setCheckoutPayment(profile.defaultPayment);
-                setViewMode('customer');
-                setIsAuthOpen(false);
-                setUsernameInput('');
-                setPasswordInput('');
-                setAuthMode('login');
-                showAlert('เข้าสู่ระบบสำเร็จ', `ยินดีต้อนรับกลับมาครับ คุณ ${usernameInput}!`);
-            } else {
-                showAlert('เข้าสู่ระบบไม่สำเร็จ', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-            }
-        }
+        if (!supabase) { showAlert('ยังไม่ได้เชื่อมฐานข้อมูล', 'กรุณาตั้งค่า VITE_SUPABASE_URL และ VITE_SUPABASE_ANON_KEY ก่อนใช้งาน'); return; }
+        const email = usernameInput.trim().toLowerCase();
+        const result = authMode === 'signup'
+            ? await supabase.auth.signUp({ email, password: passwordInput, options: { data: { username: email.split('@')[0], display_name: email.split('@')[0] } } })
+            : await supabase.auth.signInWithPassword({ email, password: passwordInput });
+        if (result.error) { showAlert(authMode === 'signup' ? 'สมัครสมาชิกไม่สำเร็จ' : 'เข้าสู่ระบบไม่สำเร็จ', result.error.message); return; }
+        setIsAuthOpen(false); setUsernameInput(''); setPasswordInput(''); setAuthMode('login');
+        if (authMode === 'signup' && !result.data.session) showAlert('ตรวจสอบอีเมลของคุณ', 'เราได้ส่งลิงก์ยืนยันบัญชีไปยังอีเมลแล้ว');
+        else showAlert(authMode === 'signup' ? 'สมัครสมาชิกสำเร็จ' : 'เข้าสู่ระบบสำเร็จ', 'บัญชีของคุณเชื่อมกับระบบกลางเรียบร้อยแล้ว');
     };
 
     const handleLogout = () => {
         showConfirm('ยืนยันการออกจากระบบ', 'คุณต้องการออกจากระบบสมาชิกใช่หรือไม่?', () => {
             setCurrentUser(null);
             setViewMode('customer');
+            supabase?.auth.signOut();
             showAlert('ออกจากระบบแล้ว', 'ระบบตัดการเชื่อมต่อเรียบร้อยครับ');
         });
     };
@@ -527,7 +396,7 @@ export function useAppState() {
         if (!currentUser?.username) {
             setAuthMode('login');
             setIsAuthOpen(true);
-            showAlert('จำกัดสิทธิ์', 'ต้องล็อกอินด้วยบัญชี Rin หรืออีเมล Rin และรหัสผ่าน 1234 เพื่อเข้าใช้งานหน้าจัดการระบบ');
+            showAlert('จำกัดสิทธิ์', 'กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับสิทธิ์ผู้ดูแลระบบ');
             return;
         }
 
@@ -541,7 +410,7 @@ export function useAppState() {
 
         setAuthMode('login');
         setIsAuthOpen(true);
-        showAlert('จำกัดสิทธิ์', 'ต้องล็อกอินด้วยบัญชี Rin หรืออีเมล Rin และรหัสผ่าน 1234 เพื่อเข้าใช้งานหน้าจัดการระบบ');
+        showAlert('จำกัดสิทธิ์', 'บัญชีนี้ยังไม่ได้รับสิทธิ์ผู้ดูแลระบบ');
     };
 
     // --- Customer Functions ---
@@ -573,7 +442,7 @@ export function useAppState() {
         }
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (!checkoutName.trim() || !checkoutPhone.trim() || !checkoutAddress.trim()) {
             showAlert('ข้อมูลส่งของไม่ครบ', 'กรุณากรอกชื่อ เบอร์โทร และที่อยู่จัดส่งให้ครบถ้วนก่อนการชำระเงินนะครับ');
             return;
@@ -596,11 +465,6 @@ export function useAppState() {
             return;
         }
 
-        const updatedProducts = products.map(p => {
-            const cartItem = cart.find(item => item.id === p.id);
-            return cartItem ? { ...p, stock: Math.max(0, p.stock - cartItem.qty) } : p;
-        });
-
         const subtotal = cartSubtotal;
         const discountValue = discountAmount;
         const shippingValue = shippingFee;
@@ -610,7 +474,7 @@ export function useAppState() {
             date: new Date().toLocaleDateString('th-TH'),
             time: new Date().toLocaleTimeString('th-TH'),
             buyer: checkoutName.trim(),
-            username: currentUser?.username || 'guest',
+            username: currentUser?.id,
             contact: checkoutPhone,
             address: checkoutAddress,
             payment: checkoutPayment === 'bank' ? 'โอนเงินธนาคาร' : checkoutPayment === 'card' ? 'บัตรเครดิต/เดบิต' : 'TrueMoney Wallet',
@@ -623,8 +487,13 @@ export function useAppState() {
             total: finalTotal
         };
 
-        setOrders(prev => [newOrder, ...prev]);
-        setProducts(updatedProducts);
+        if (!supabase || !currentUser?.id) {
+            showAlert('กรุณาเข้าสู่ระบบ', 'ต้องเข้าสู่ระบบก่อนจึงจะสั่งซื้อและบันทึกข้อมูลข้ามเครื่องได้');
+            return;
+        }
+        const { error } = await supabase.rpc('create_order', { payload: newOrder });
+        if (error) { showAlert('ชำระเงินไม่สำเร็จ', error.message); return; }
+        await refreshStore();
         showAlert(
             'การชำระเงินจำลองเสร็จสมบูรณ์!',
             `ยอดชำระ ฿${finalTotal.toLocaleString()} บันทึกออเดอร์ในนามคุณ "${checkoutName.trim()}" เรียบร้อย!`
@@ -637,13 +506,20 @@ export function useAppState() {
     };
 
     // --- Seller Functions ---
-    const adjustStock = (id, amount) => {
-        setProducts(products.map(p => p.id === id ? { ...p, stock: Math.max(0, p.stock + amount) } : p));
+    const adjustStock = async (id, amount) => {
+        const product = products.find((item) => item.id === id);
+        if (!product || !supabase) return;
+        const { error } = await supabase.from('products').update({ stock: Math.max(0, product.stock + amount) }).eq('id', id);
+        if (error) { showAlert('อัปเดตสต็อกไม่สำเร็จ', error.message); return; }
+        await refreshStore();
     };
 
     const handleDeleteProduct = (id, name) => {
         showConfirm('ยืนยันการถอดสินค้า', `คุณต้องการลบสินค้า "${name}" ออกจากระบบใช่หรือไม่?`, () => {
-            setProducts(products.filter(p => p.id !== id));
+            supabase?.from('products').delete().eq('id', id).then(async ({ error }) => {
+                if (error) { showAlert('ลบสินค้าไม่สำเร็จ', error.message); return; }
+                await refreshStore();
+            });
             setCart(cart.filter(item => item.id !== id));
             showAlert('สำเร็จ', `ถอดสินค้าเรียบร้อยแล้ว`);
         });
@@ -678,15 +554,15 @@ export function useAppState() {
         }
 
         const createdProduct = {
-            id: Date.now(),
             name: newProduct.name,
             price: Number(newProduct.price),
             category: finalCategory,
-            img: finalImage,
+            image_url: finalImage,
             stock: Number(newProduct.stock)
         };
-
-        setProducts([createdProduct, ...products]);
+        const { error } = await supabase.from('products').insert(createdProduct);
+        if (error) { showAlert('เพิ่มสินค้าไม่สำเร็จ', error.message); return; }
+        await refreshStore();
         setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '' });
         setCustomCategoryInput('');
         setNewProductImagePreview('');
@@ -725,21 +601,15 @@ export function useAppState() {
             }
         }
 
-        const updatedProducts = products.map(p => {
-            if (p.id === editingProduct.id) {
-                return {
-                    ...p,
-                    name: editingProduct.name,
-                    price: Number(editingProduct.price),
-                    stock: Number(editingProduct.stock),
-                    category: finalCategory,
-                    img: finalImage
-                };
-            }
-            return p;
-        });
-
-        setProducts(updatedProducts);
+        const { error } = await supabase.from('products').update({
+            name: editingProduct.name,
+            price: Number(editingProduct.price),
+            stock: Number(editingProduct.stock),
+            category: finalCategory,
+            image_url: finalImage
+        }).eq('id', editingProduct.id);
+        if (error) { showAlert('อัปเดตสินค้าไม่สำเร็จ', error.message); return; }
+        await refreshStore();
         setEditingProduct(null);
         setEditProductImagePreview('');
         showAlert('สำเร็จ!', `อัปเดตข้อมูลสินค้าเรียบร้อยแล้วครับ`);
@@ -747,7 +617,10 @@ export function useAppState() {
 
     const handleClearOrders = () => {
         showConfirm('ยืนยันการล้างข้อมูล', 'คุณต้องการเคลียร์ประวัติใบออเดอร์ลูกค้าทั้งหมดในระบบใช่หรือไม่?', () => {
-            setOrders([]);
+            supabase?.from('orders').delete().neq('id', '').then(async ({ error }) => {
+                if (error) { showAlert('ล้างออเดอร์ไม่สำเร็จ', error.message); return; }
+                await refreshStore();
+            });
             showAlert('สำเร็จ', 'ล้างข้อมูลออเดอร์เรียบร้อยแล้ว');
         });
     };
@@ -757,50 +630,41 @@ export function useAppState() {
             'ยืนยันการเคลียร์ออเดอร์',
             `คุณต้องการลบคำสั่งซื้อหมายเลข ${orderId} ของคุณ ${buyer} ออกจากระบบใช่หรือไม่?`,
             () => {
-                setOrders(orders.filter(order => order.orderId !== orderId));
+                supabase?.from('orders').delete().eq('order_number', orderId).then(async ({ error }) => {
+                    if (error) { showAlert('ลบออเดอร์ไม่สำเร็จ', error.message); return; }
+                    await refreshStore();
+                });
                 showAlert('สำเร็จ', `เคลียร์คำสั่งซื้อ ${orderId} เรียบร้อยแล้วครับ`);
             }
         );
     };
 
     // --- Settings ---
-    const handleSaveSettings = (e) => {
+    const handleSaveSettings = async (e) => {
         e.preventDefault();
         const nextProfile = { ...settingsForm };
+        if (!supabase || !currentUser?.id) { showAlert('กรุณาเข้าสู่ระบบ', 'ต้องเข้าสู่ระบบก่อนบันทึกข้อมูล'); return; }
+        const { error } = await supabase.from('profiles').update({
+            display_name: nextProfile.displayName,
+            phone: nextProfile.phone, address: nextProfile.address, default_payment: nextProfile.defaultPayment
+        }).eq('id', currentUser.id);
+        if (error) { showAlert('บันทึกไม่สำเร็จ', error.message); return; }
         setUserProfile(nextProfile);
-        if (currentUser?.username) {
-            saveUserProfile(currentUser.username, nextProfile);
-        }
         showAlert('บันทึกสำเร็จ!', 'อัปเดตข้อมูลบัญชีผู้ใช้งานของคุณเรียบร้อยแล้วครับ');
     };
 
-    const handleChangePassword = (e) => {
+    const handleChangePassword = async (e) => {
         e.preventDefault();
         if (!currentUser) {
             showAlert('แจ้งเตือน', 'คุณต้องล็อกอินด้วยบัญชีสมาชิกก่อนเปลี่ยนรหัสผ่านครับ');
-            return;
-        }
-        if (currentUser.isAdmin && currentUser.username.toLowerCase() === SPECIAL_ADMIN_USERNAME.toLowerCase()) {
-            showAlert('ไม่สามารถเปลี่ยนรหัสผ่านได้', 'บัญชีผู้ดูแลหลักใช้รหัสผ่านที่กำหนดไว้สำหรับระบบจำลอง');
-            return;
-        }
-        const realPassword = localStorage.getItem(`user_db_${currentUser.username}`);
-        if (oldPassword !== realPassword) {
-            showAlert('เกิดข้อผิดพลาด', 'รหัสผ่านปัจจุบันไม่ถูกต้องครับ');
             return;
         }
         if (!newPassword || newPassword.length < 4) {
             showAlert('เกิดข้อผิดพลาด', 'กรุณาระบุรหัสผ่านใหม่ที่มีความยาวอย่างน้อย 4 ตัวอักษร');
             return;
         }
-        localStorage.setItem(`user_db_${currentUser.username}`, newPassword);
-        if (currentUser.isAdmin) {
-            setAdminAccounts((accounts) => accounts.map((account) => (
-                account.username.toLowerCase() === currentUser.username.toLowerCase()
-                    ? { ...account, password: newPassword }
-                    : account
-            )));
-        }
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) { showAlert('เปลี่ยนรหัสผ่านไม่สำเร็จ', error.message); return; }
         setOldPassword('');
         setNewPassword('');
         showAlert('เปลี่ยนรหัสผ่านแล้ว!', 'ระบบจำลองบันทึกรหัสผ่านใหม่ของคุณเรียบร้อยแล้วครับ');

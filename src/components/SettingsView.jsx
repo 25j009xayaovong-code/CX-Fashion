@@ -54,7 +54,8 @@ function SettingsView({ state }) {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">อีเมลผู้ใช้งาน</label>
-                                    <input type="email" value={settingsForm.email} onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })} className="w-full px-4 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:border-amber-500" />
+                                    <input type="email" value={settingsForm.email} readOnly className="w-full cursor-not-allowed bg-gray-50 px-4 py-2 text-xs rounded-lg border border-gray-200 text-gray-500" />
+                                    <p className="mt-1 text-[10px] text-gray-400">อีเมลเชื่อมกับบัญชี Supabase และแก้ไขจากหน้าโปรไฟล์นี้ไม่ได้</p>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ที่อยู่จัดส่งสินค้าโดยเริ่มต้น *</label>
@@ -102,7 +103,7 @@ function SettingsView({ state }) {
                         </div>
 
                         <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-xs">
-                            <h4 className="text-sm font-black text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">🔒 ความปลอดภัย (จำลองเปลี่ยนรหัสผ่าน)</h4>
+                            <h4 className="text-sm font-black text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">🔒 ความปลอดภัย</h4>
                             {currentUser ? (
                                 <form onSubmit={handleChangePassword} className="space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

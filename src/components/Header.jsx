@@ -90,16 +90,17 @@ function Header({ state }) {
                         <h3 className="text-xl font-black text-gray-950 mb-1 text-center">
                             {authMode === 'login' ? 'ล็อกอินเข้าสู่ระบบ' : 'สมัครสมาชิกระบบ'}
                         </h3>
-                        <p className="text-[10px] text-gray-400 text-center mb-6">ล็อกอินเพื่อบันทึกข้อมูลและดึงที่อยู่จัดส่งของคุณขึ้นมาใช้ทันที</p>
+                        <p className="text-[10px] text-gray-400 text-center mb-6">เข้าสู่ระบบเพื่อบันทึกข้อมูลไว้บนคลาวด์ และใช้งานข้ามเครื่องได้</p>
 
                         <form onSubmit={handleAuthSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">ชื่อบัญชีผู้ใช้งาน</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมล</label>
                                 <input
                                     type="text"
                                     value={usernameInput}
                                     onChange={(e) => setUsernameInput(e.target.value)}
-                                    placeholder="เช่น fashion_admin"
+                                    placeholder="you@example.com"
+                                    autoComplete="email"
                                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-blue-500 focus:outline-none"
                                 />
                             </div>
@@ -109,12 +110,13 @@ function Header({ state }) {
                                     type="password"
                                     value={passwordInput}
                                     onChange={(e) => setPasswordInput(e.target.value)}
-                                    placeholder="******"
+                                    placeholder="อย่างน้อย 6 ตัวอักษร"
+                                    autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
                                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-blue-500 focus:outline-none"
                                 />
                             </div>
                             <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow-md transition-all mt-6">
-                                {authMode === 'login' ? 'เข้าสู่ระบบจำลอง' : 'สมัครสมาชิกใหม่'}
+                                {authMode === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิกใหม่'}
                             </button>
                         </form>
 
