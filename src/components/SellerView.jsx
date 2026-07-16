@@ -54,7 +54,7 @@ function SellerView({ state }) {
     };
 
     return (
-        <div className="flex-grow container mx-auto px-6 py-10">
+        <div className="container mx-auto flex-grow px-4 py-7 sm:px-6 sm:py-10">
             <div className="mb-8 border-b border-gray-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-black text-gray-950 flex items-center gap-2">⚙️ Dashboard ผู้จัดการระบบหลังบ้าน</h2>

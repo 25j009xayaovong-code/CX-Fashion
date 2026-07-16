@@ -17,26 +17,26 @@ function Header({ state }) {
 
     return (
         <>
-            <header className="bg-white shadow-sm sticky top-0 z-40">
-                <div className="container mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center space-x-5 justify-between w-full sm:w-auto">
+            <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/95 shadow-sm backdrop-blur">
+                <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 py-3 sm:flex-row sm:gap-4 sm:px-6 sm:py-4">
+                    <div className="flex w-full items-center justify-between sm:w-auto">
                         <h1
                             onClick={() => { setViewMode('customer'); setSearchQuery(''); setIsOrderViewOpen(false); }}
-                            className="text-xl font-black text-gray-950 tracking-wider cursor-pointer select-none"
+                            className="cursor-pointer select-none text-lg font-black tracking-tight text-stone-950 sm:text-xl sm:tracking-wider"
                         >
                             FASHION STORE
                         </h1>
                     </div>
 
-                    <div className="flex items-center space-x-4 w-full sm:w-auto justify-end">
+                    <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:gap-4">
                         {viewMode !== 'settings' && !isOrderViewOpen && (
-                            <div className="relative flex-1 sm:flex-none">
+                            <div className="relative min-w-0 flex-1 sm:flex-none">
                                 <input
                                     type="text"
                                     placeholder="ค้นหาไอเท็ม..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full sm:w-56 pl-9 pr-4 py-2 text-xs rounded-xl border border-gray-250 focus:outline-none focus:border-gray-500"
+                                    className="w-full rounded-xl border border-stone-300 py-2.5 pl-9 pr-3 text-xs focus:border-stone-950 focus:outline-none sm:w-56"
                                 />
                                 <svg className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -44,7 +44,7 @@ function Header({ state }) {
                             </div>
                         )}
 
-                        <div className="flex items-center space-x-2">
+                        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                             {currentUser && (
                                 <button
                                     onClick={() => { setViewMode('settings'); setSearchQuery(''); setIsOrderViewOpen(false); }}
@@ -56,17 +56,17 @@ function Header({ state }) {
                             )}
 
                             {currentUser ? (
-                                <button onClick={handleLogout} className="text-xs font-bold text-red-500 hover:text-white border border-red-200 hover:bg-red-500 px-3 py-2.5 rounded-xl transition-all">
+                                <button onClick={handleLogout} className="rounded-xl border border-red-200 px-2.5 py-2.5 text-[11px] font-bold text-red-500 transition-all hover:bg-red-500 hover:text-white sm:px-3 sm:text-xs">
                                     ออกจากระบบ
                                 </button>
                             ) : (
-                                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="text-xs font-bold text-gray-700 hover:text-blue-600 border border-gray-250 px-3.5 py-2.5 rounded-xl hover:bg-gray-50 transition">
+                                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="rounded-xl border border-stone-300 px-2.5 py-2.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-950 hover:text-white sm:px-3.5 sm:text-xs">
                                     เข้าสู่ระบบ
                                 </button>
                             )}
 
                             {!isAdminUser && viewMode === 'customer' && (
-                                <button onClick={() => setIsCartOpen(true)} className="relative p-2.5 text-gray-700 hover:bg-gray-100 rounded-full transition">
+                                <button onClick={() => setIsCartOpen(true)} className="relative rounded-xl p-2.5 text-stone-700 transition hover:bg-stone-100" aria-label="เปิดตะกร้าสินค้า">
                                     <svg className="h-5.5 w-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                     </svg>

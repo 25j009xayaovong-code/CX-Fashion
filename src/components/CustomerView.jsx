@@ -14,22 +14,22 @@ function CustomerView({ state }) {
 
     return (
         <div className="flex-grow bg-stone-50">
-            <section className="store-hero px-5 py-12 sm:px-8 sm:py-16">
-                <div className="mx-auto grid max-w-6xl items-end gap-10 lg:grid-cols-[1fr_auto]">
+            <section className="store-hero px-5 py-10 sm:px-8 sm:py-16">
+                <div className="mx-auto grid max-w-6xl items-end gap-6 sm:gap-10 lg:grid-cols-[1fr_auto]">
                     <div>
                         <p className="mb-4 text-xs font-bold uppercase tracking-[0.24em] text-amber-200">New season / curated essentials</p>
-                        <h2 className="max-w-2xl text-4xl font-black leading-[0.95] tracking-[-0.045em] text-white sm:text-6xl">Style that feels<br /><em className="font-serif font-normal text-amber-200">like you.</em></h2>
-                        <p className="mt-6 max-w-lg text-sm leading-6 text-stone-300">สวัสดีคุณ {userProfile.displayName} — เลือกไอเท็มที่ใช่สำหรับทุกวันของคุณ</p>
+                        <h2 className="max-w-2xl text-[2.45rem] font-black leading-[0.9] tracking-[-0.045em] text-white sm:text-6xl sm:leading-[0.95]">Style that feels<br /><em className="font-serif font-normal text-amber-200">like you.</em></h2>
+                        <p className="mt-5 max-w-lg text-sm leading-6 text-stone-300 sm:mt-6">สวัสดีคุณ {userProfile.displayName} — เลือกไอเท็มที่ใช่สำหรับทุกวันของคุณ</p>
                     </div>
-                    <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-right backdrop-blur-sm">
+                    <div className="w-full rounded-2xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur-sm sm:w-auto sm:p-4">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-300">Free shipping</p>
                         <p className="mt-1 text-sm font-bold text-white">เมื่อสั่งซื้อครบ ฿1,500</p>
                     </div>
                 </div>
             </section>
 
-            <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-                <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-14">
+                <div className="mb-6 flex flex-col justify-between gap-3 sm:mb-8 sm:flex-row sm:items-end sm:gap-5">
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Shop by category</p>
                         <h3 className="mt-2 text-2xl font-black tracking-tight text-stone-950 sm:text-3xl">เลือกสิ่งที่เป็นคุณ</h3>
@@ -37,7 +37,7 @@ function CustomerView({ state }) {
                     <p className="text-sm text-stone-500">พบ {filteredProductsForCustomer.length} รายการ</p>
                 </div>
 
-                <div className="category-rail mb-10 flex gap-2 overflow-x-auto pb-2">
+                <div className="category-rail -mx-5 mb-7 flex gap-2 overflow-x-auto px-5 pb-2 sm:mx-0 sm:mb-10 sm:px-0">
                     {allCategoryTabs.map(cat => (
                         <button key={cat} onClick={() => setCustomerCategory(cat)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition ${customerCategory === cat ? 'bg-stone-950 text-white shadow-lg shadow-stone-900/15' : 'border border-stone-200 bg-white text-stone-600 hover:border-stone-400 hover:text-stone-950'}`}>
                             {cat}
@@ -51,7 +51,7 @@ function CustomerView({ state }) {
                         <p className="mt-3 text-sm font-semibold text-stone-600">ไม่พบสินค้าที่กำลังตามหา</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4">
                         {filteredProductsForCustomer.map((product) => {
                             const isOutOfStock = product.stock <= 0;
                             const quantityInCart = cart.find((item) => item.id === product.id)?.qty || 0;
@@ -59,23 +59,23 @@ function CustomerView({ state }) {
                             const selectedQuantity = Math.min(selectedQuantities[product.id] || 1, Math.max(1, availableToAdd));
                             return (
                                 <article key={product.id} className="product-card group flex flex-col">
-                                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-stone-200">
+                                    <div className="relative aspect-square overflow-hidden rounded-2xl bg-stone-200 sm:aspect-[4/5]">
                                         <img src={product.img} alt={product.name} className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${isOutOfStock ? 'grayscale opacity-40' : ''}`} />
                                         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-stone-900 backdrop-blur">{product.category}</span>
                                         {isOutOfStock && <span className="absolute inset-0 m-auto flex h-10 w-28 items-center justify-center rounded-full bg-stone-950 text-[10px] font-bold text-white">สินค้าหมด</span>}
                                     </div>
-                                    <div className="px-1 pt-4">
+                                    <div className="px-0.5 pt-3 sm:px-1 sm:pt-4">
                                         <div className="flex items-start justify-between gap-3">
-                                            <h4 className="min-h-10 text-sm font-bold leading-5 text-stone-900 line-clamp-2">{product.name}</h4>
-                                            <span className="whitespace-nowrap text-base font-black text-stone-950">฿{product.price.toLocaleString()}</span>
+                                            <h4 className="min-h-10 text-[13px] font-bold leading-5 text-stone-900 line-clamp-2 sm:text-sm">{product.name}</h4>
+                                            <span className="whitespace-nowrap text-sm font-black text-stone-950 sm:text-base">฿{product.price.toLocaleString()}</span>
                                         </div>
                                         <p className={`mt-1 text-[11px] font-medium ${product.stock <= 3 ? 'text-amber-700' : 'text-stone-400'}`}>เหลือ {product.stock} ชิ้น {product.stock <= 3 && product.stock > 0 ? '· ใกล้หมด' : ''}</p>
-                                        <div className="mt-4 flex gap-2">
-                                            <select value={selectedQuantity} onChange={(e) => setSelectedQuantities((quantities) => ({ ...quantities, [product.id]: Number(e.target.value) }))} disabled={availableToAdd === 0} aria-label={`เลือกจำนวน ${product.name}`} className="w-14 rounded-xl border border-stone-200 bg-white px-1.5 py-2.5 text-xs font-bold text-stone-700 focus:border-stone-950 focus:outline-none disabled:cursor-not-allowed disabled:bg-stone-100">
+                                        <div className="mt-3 flex justify-end gap-1.5 sm:mt-4 sm:justify-start sm:gap-2">
+                                            <select value={selectedQuantity} onChange={(e) => setSelectedQuantities((quantities) => ({ ...quantities, [product.id]: Number(e.target.value) }))} disabled={availableToAdd === 0} aria-label={`เลือกจำนวน ${product.name}`} className="w-9 rounded-lg border border-stone-200 bg-white px-0.5 py-1.5 text-[11px] font-bold text-stone-700 focus:border-stone-950 focus:outline-none disabled:cursor-not-allowed disabled:bg-stone-100 sm:w-14 sm:rounded-xl sm:px-1.5 sm:py-2.5 sm:text-xs">
                                                 {Array.from({ length: availableToAdd }, (_, index) => index + 1).map((quantity) => <option key={quantity} value={quantity}>{quantity}</option>)}
                                             </select>
-                                            <button onClick={() => addToCart(product, selectedQuantity)} disabled={isOutOfStock || availableToAdd === 0} className={`flex-1 rounded-xl px-3 py-2.5 text-xs font-bold transition ${isOutOfStock || availableToAdd === 0 ? 'cursor-not-allowed bg-stone-100 text-stone-400' : 'bg-stone-950 text-white hover:bg-amber-700'}`}>
-                                                {isOutOfStock ? 'หมดแล้ว' : 'เพิ่มลงตะกร้า'}
+                                            <button onClick={() => addToCart(product, selectedQuantity)} disabled={isOutOfStock || availableToAdd === 0} className={`w-[4.25rem] flex-none rounded-lg px-1.5 py-1.5 text-[11px] font-bold transition sm:flex-1 sm:w-auto sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-xs ${isOutOfStock || availableToAdd === 0 ? 'cursor-not-allowed bg-stone-100 text-stone-400' : 'bg-stone-950 text-white hover:bg-amber-700'}`}>
+                                                {isOutOfStock ? 'หมดแล้ว' : <><span className="sm:hidden">เพิ่ม</span><span className="hidden sm:inline">เพิ่มลงตะกร้า</span></>}
                                             </button>
                                         </div>
                                     </div>

@@ -9,7 +9,7 @@ function SettingsView({ state }) {
 
     return (
         <div className="flex-grow">
-            <div className="container mx-auto px-6 py-10 max-w-4xl">
+            <div className="container mx-auto max-w-4xl px-4 py-7 sm:px-6 sm:py-10">
                 <div className="mb-8 border-b border-gray-200 pb-4">
                     <h2 className="text-2xl font-black text-gray-950">👤 การตั้งค่าโปรไฟล์และบัญชี</h2>
                     <p className="text-xs text-gray-500 mt-1">จัดการที่อยู่จัดส่งสินค้า วิธีการชำระเงินที่ต้องการ และอัปเดตข้อมูลความปลอดภัยของบัญชีผู้ใช้นี้</p>
