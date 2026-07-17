@@ -7,11 +7,13 @@ function SellerView({ state }) {
         allCategoryTabs, adjustStock, startEditingProduct, handleDeleteProduct,
         newProduct, setNewProduct, customCategoryInput, setCustomCategoryInput,
         sellerStats,
+        sellerSalesByDay,
         newProductImagePreview, setNewProductImagePreview, dropdownOptions,
         handleAddProduct, isOrderViewOpen, setIsOrderViewOpen,
         isAddProductViewOpen, setIsAddProductViewOpen,
         isInventoryViewOpen, setIsInventoryViewOpen,
         isAdminManagementViewOpen, setIsAdminManagementViewOpen,
+        isCouponManagementViewOpen, setIsCouponManagementViewOpen,
         adminAccounts, newAdminUsername, setNewAdminUsername,
         newAdminPassword, setNewAdminPassword, handleCreateAdmin, handleDeleteAdmin,
         customerAccounts, isCustomerAccountViewOpen, setIsCustomerAccountViewOpen,
@@ -21,6 +23,7 @@ function SellerView({ state }) {
         orderDateTo, setOrderDateTo,
         clearAllFilters,
         handleClearOrders, handleDeleteSingleOrder,
+        updateOrderStatus, coupons, newCoupon, setNewCoupon, handleCreateCoupon, toggleCoupon,
         editingProduct, setEditingProduct, editCategoryInput, setEditCategoryInput,
         editProductImagePreview, setEditProductImagePreview, handleSaveEditProduct
     } = state;
@@ -44,12 +47,13 @@ function SellerView({ state }) {
     };
 
     const hasActiveFilters = orderDateFilter || orderDateFrom || orderDateTo;
-    const isFocusedSellerView = isAddProductViewOpen || isInventoryViewOpen || isCustomerAccountViewOpen || isAdminManagementViewOpen || isOrderViewOpen;
+    const isFocusedSellerView = isAddProductViewOpen || isInventoryViewOpen || isCustomerAccountViewOpen || isAdminManagementViewOpen || isCouponManagementViewOpen || isOrderViewOpen;
     const returnToDashboard = () => {
         setIsAddProductViewOpen(false);
         setIsInventoryViewOpen(false);
         setIsCustomerAccountViewOpen(false);
         setIsAdminManagementViewOpen(false);
+        setIsCouponManagementViewOpen(false);
         setIsOrderViewOpen(false);
     };
 
@@ -85,6 +89,11 @@ function SellerView({ state }) {
                 </div>
             </div>
 
+            <section className="mb-8 rounded-2xl border border-gray-150 bg-white p-5 shadow-sm">
+                <div className="mb-5 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sales overview</p><h3 className="mt-1 text-sm font-black text-gray-900">ยอดขาย 7 วันล่าสุด</h3></div><span className="text-xs font-bold text-emerald-600">฿{sellerStats.totalSales.toLocaleString()}</span></div>
+                <div className="flex h-28 items-end gap-2">{sellerSalesByDay.map((day) => { const peak = Math.max(...sellerSalesByDay.map((item) => item.total), 1); return <div key={day.label} className="flex flex-1 flex-col items-center gap-2"><span className="text-[9px] font-bold text-gray-500">{day.total ? `฿${Math.round(day.total / 1000)}k` : ''}</span><div className="w-full rounded-t-md bg-amber-400 transition-all" style={{ height: `${Math.max(5, (day.total / peak) * 72)}px` }}></div><span className="text-[9px] font-bold text-gray-400">{day.label}</span></div>; })}</div>
+            </section>
+
             <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-8">
                     <button type="button" onClick={() => { returnToDashboard(); setIsAdminManagementViewOpen(true); }} className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm text-left hover:border-purple-300 hover:bg-purple-50/30 transition">
                         <span className="text-2xl">👥</span>
@@ -110,6 +119,11 @@ function SellerView({ state }) {
                         <span className="text-2xl">📦</span>
                         <span className="block mt-3 text-base font-extrabold text-gray-900">รายงานสต็อกสินค้าหน้าร้าน</span>
                         <span className="block mt-1 text-xs text-gray-400">{filteredProductsForSeller.length} รายการ · ตรวจสอบและจัดการสต็อก</span>
+                    </button>
+                    <button type="button" onClick={() => { returnToDashboard(); setIsCouponManagementViewOpen(true); }} className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm text-left hover:border-amber-300 hover:bg-amber-50/30 transition">
+                        <span className="text-2xl">🎟️</span>
+                        <span className="block mt-3 text-base font-extrabold text-gray-900">จัดการคูปอง</span>
+                        <span className="block mt-1 text-xs text-gray-400">{coupons.length} คูปอง · สร้างส่วนลดและกำหนดวันหมดอายุ</span>
                     </button>
                 </section>
             </>
@@ -170,6 +184,23 @@ function SellerView({ state }) {
                             ))}
                         </div>
                     )}
+                </section>
+            )}
+
+            {isCouponManagementViewOpen && (
+                <section className="mx-auto max-w-4xl rounded-2xl border border-gray-150 bg-white p-6 shadow-sm">
+                    <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-100 pb-3"><div><h3 className="text-base font-extrabold text-gray-900">🎟️ จัดการคูปองส่วนลด</h3><p className="mt-1 text-[11px] text-gray-400">สร้าง ปิดใช้งาน และกำหนดเงื่อนไขของคูปอง</p></div><button type="button" onClick={returnToDashboard} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">← กลับ</button></div>
+                    <form onSubmit={handleCreateCoupon} className="grid grid-cols-1 gap-3 rounded-xl bg-amber-50 p-4 sm:grid-cols-2">
+                        <input required value={newCoupon.code} onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })} placeholder="รหัส เช่น SAVE20" className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none" />
+                        <input required value={newCoupon.label} onChange={(e) => setNewCoupon({ ...newCoupon, label: e.target.value })} placeholder="ชื่อคูปอง เช่น ลด 20%" className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none" />
+                        <select value={newCoupon.type} onChange={(e) => setNewCoupon({ ...newCoupon, type: e.target.value })} className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none"><option value="percent">ลดเป็นเปอร์เซ็นต์</option><option value="shipping">ส่งฟรี</option></select>
+                        <input type="number" min="0" value={newCoupon.value} onChange={(e) => setNewCoupon({ ...newCoupon, value: e.target.value })} placeholder="มูลค่าส่วนลด" disabled={newCoupon.type === 'shipping'} className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none disabled:bg-amber-100" />
+                        <input type="number" min="0" value={newCoupon.minimumOrder} onChange={(e) => setNewCoupon({ ...newCoupon, minimumOrder: e.target.value })} placeholder="ยอดสั่งซื้อขั้นต่ำ" className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none" />
+                        <input type="date" value={newCoupon.expiresAt} onChange={(e) => setNewCoupon({ ...newCoupon, expiresAt: e.target.value })} className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none" />
+                        <input type="number" min="1" value={newCoupon.usageLimit} onChange={(e) => setNewCoupon({ ...newCoupon, usageLimit: e.target.value })} placeholder="จำนวนสิทธิ์ (ไม่จำกัดถ้าว่าง)" className="rounded-lg border border-amber-200 bg-white px-3 py-2.5 text-xs focus:outline-none" />
+                        <button type="submit" className="rounded-lg bg-amber-500 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-amber-600">สร้างคูปอง</button>
+                    </form>
+                    <div className="mt-5 divide-y divide-gray-100">{coupons.map((coupon) => <div key={coupon.code} className="flex flex-col gap-2 py-3 text-xs sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-gray-900">{coupon.code} · {coupon.label}</p><p className="mt-1 text-[10px] text-gray-400">{coupon.type === 'percent' ? `ลด ${coupon.value}%` : 'ส่งฟรี'} · ใช้แล้ว {coupon.used_count}{coupon.usage_limit ? `/${coupon.usage_limit}` : ''}{coupon.expires_at ? ` · หมดอายุ ${new Date(coupon.expires_at).toLocaleDateString('th-TH')}` : ''}</p></div><button onClick={() => toggleCoupon(coupon)} className={`w-fit rounded-full px-3 py-1.5 text-[10px] font-bold ${coupon.active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{coupon.active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</button></div>)}</div>
                 </section>
             )}
 
@@ -298,6 +329,7 @@ function SellerView({ state }) {
                                         <th className="py-4 px-6">ลูกค้า & สิทธิ์ชำระเงิน</th>
                                         <th className="py-4 px-6">ผู้รับปลายทาง / เบอร์ติดต่อ</th>
                                         <th className="py-4 px-6">สินค้าทั้งหมด</th>
+                                        <th className="py-4 px-6">สถานะ / ติดตาม</th>
                                         <th className="py-4 px-6 text-right">ยอดรวมสุทธิ</th>
                                         <th className="py-4 px-6 text-center">จัดการ</th>
                                     </tr>
@@ -310,6 +342,14 @@ function SellerView({ state }) {
                                                 <div className="space-y-1">
                                                     <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-100 text-gray-700 text-[11px] font-bold rounded-md"><span>📅</span> {order.date}</span>
                                                     <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-50 text-amber-800 text-[11px] font-bold rounded-md ml-1 sm:ml-0 block sm:w-fit"><span>🕒</span> {order.time || 'ไม่ระบุเวลา'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="space-y-2">
+                                                    <select defaultValue={order.status || 'pending'} onChange={(e) => updateOrderStatus(order.orderId, e.target.value, order.trackingNumber)} className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-[10px] font-bold text-gray-700 focus:outline-none">
+                                                        <option value="pending">รอชำระเงิน</option><option value="paid">ชำระแล้ว</option><option value="packing">กำลังแพ็ก</option><option value="shipped">จัดส่งแล้ว</option><option value="completed">สำเร็จ</option><option value="cancelled">ยกเลิก</option>
+                                                    </select>
+                                                    <input defaultValue={order.trackingNumber || ''} onBlur={(e) => updateOrderStatus(order.orderId, order.status || 'pending', e.target.value)} placeholder="เลขพัสดุ" className="block w-28 rounded-lg border border-gray-200 px-2 py-1.5 text-[10px] focus:outline-none" />
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
@@ -366,8 +406,8 @@ function SellerView({ state }) {
                                     <input type="number" required min="0" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} placeholder="เช่น 1200" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สต็อกเริ่มต้น *</label>
-                                    <input type="number" required min="0" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} placeholder="เช่น 20" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สต็อกรวม (กรณี One size)</label>
+                                    <input type="number" min="0" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} placeholder="เช่น 20" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 </div>
                             </div>
                             <div>
@@ -387,6 +427,11 @@ function SellerView({ state }) {
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ไซซ์ที่มีจำหน่าย</label>
                                 <input type="text" value={newProduct.sizes} onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })} placeholder="เช่น S, M, L, XL หรือ One size" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 <p className="mt-1 text-[10px] text-gray-400">คั่นแต่ละไซซ์ด้วยเครื่องหมายจุลภาค (,)</p>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สต็อกแยกตามไซซ์</label>
+                                <input type="text" value={newProduct.variantStocks} onChange={(e) => setNewProduct({ ...newProduct, variantStocks: e.target.value })} placeholder="เช่น S: 5, M: 10, L: 4" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                                <p className="mt-1 text-[10px] text-gray-400">ระบุไซซ์และจำนวนด้วย : แล้วคั่นแต่ละรายการด้วย ,</p>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รูปภาพสินค้า</label>
@@ -456,9 +501,7 @@ function SellerView({ state }) {
                                                 <td className="py-4 px-6 font-bold text-gray-900 text-xs">฿{product.price.toLocaleString()}</td>
                                                 <td className="py-4 px-6">
                                                     <div className="flex items-center justify-center space-x-1.5">
-                                                        <button onClick={() => adjustStock(product.id, -1)} className="w-6 h-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center justify-center font-bold text-xs">-</button>
-                                                        <span className="w-8 text-center font-bold text-xs text-gray-900">{product.stock}</span>
-                                                        <button onClick={() => adjustStock(product.id, 1)} className="w-6 h-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center justify-center font-bold text-xs">+</button>
+                                                        <div className="space-y-1">{(product.variants?.length ? product.variants : [{ id: null, size: 'รวม', stock: product.stock }]).map((variant) => <div key={variant.id || 'total'} className="flex items-center gap-1"><span className="w-7 text-[9px] font-bold text-gray-400">{variant.size}</span><button onClick={() => adjustStock(product.id, -1, variant.id)} className="h-6 w-6 rounded-md bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200">-</button><span className="w-7 text-center text-xs font-bold text-gray-900">{variant.stock}</span><button onClick={() => adjustStock(product.id, 1, variant.id)} className="h-6 w-6 rounded-md bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200">+</button></div>)}</div>
                                                     </div>
                                                 </td>
                                                 <td className="py-4 px-6 text-center">
@@ -525,6 +568,11 @@ function SellerView({ state }) {
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ไซซ์ที่มีจำหน่าย</label>
                                 <input type="text" value={editingProduct.sizes || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sizes: e.target.value })} placeholder="เช่น S, M, L, XL หรือ One size" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 <p className="mt-1 text-[10px] text-gray-400">คั่นแต่ละไซซ์ด้วยเครื่องหมายจุลภาค (,)</p>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สต็อกแยกตามไซซ์</label>
+                                <input type="text" value={editingProduct.variantStocks || ''} onChange={(e) => setEditingProduct({ ...editingProduct, variantStocks: e.target.value })} placeholder="เช่น S: 5, M: 10, L: 4" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                                <p className="mt-1 text-[10px] text-gray-400">ระบุไซซ์และจำนวนด้วย : แล้วคั่นแต่ละรายการด้วย ,</p>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">เปลี่ยนรูปภาพสินค้า</label>

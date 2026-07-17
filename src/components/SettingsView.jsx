@@ -91,6 +91,8 @@ function SettingsView({ state }) {
                                                 <span className="text-[11px] font-black text-blue-600">฿{order.total.toLocaleString()}</span>
                                             </div>
                                             <div className="mt-2 flex flex-wrap gap-2">
+                                                <span className="text-[10px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full">{({ pending: 'รอชำระเงิน', paid: 'ชำระแล้ว', packing: 'กำลังแพ็ก', shipped: 'จัดส่งแล้ว', completed: 'สำเร็จ', cancelled: 'ยกเลิก' })[order.status] || 'รอชำระเงิน'}</span>
+                                                {order.trackingNumber && <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">พัสดุ: {order.trackingNumber}</span>}
                                                 {order.couponLabel && (
                                                     <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">{order.couponLabel}</span>
                                                 )}

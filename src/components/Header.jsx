@@ -5,6 +5,7 @@ function Header({ state }) {
         viewMode, setViewMode, searchQuery, setSearchQuery,
         currentUser, handleLogout, setIsAuthOpen, setAuthMode,
         setIsCartOpen, cart, setIsOrderViewOpen, isOrderViewOpen,
+        selectedProduct, setSelectedProduct,
         isAuthOpen, setIsAuthOpen: closeAuth,
         authMode, setAuthMode: switchAuthMode,
         usernameInput, setUsernameInput,
@@ -66,7 +67,7 @@ function Header({ state }) {
                             )}
 
                             {!isAdminUser && viewMode === 'customer' && (
-                                <button onClick={() => setIsCartOpen(true)} className="relative rounded-xl p-2.5 text-stone-700 transition hover:bg-stone-100" aria-label="เปิดตะกร้าสินค้า">
+                                <button onClick={() => { if (selectedProduct) setSelectedProduct(null); setIsCartOpen(true); }} className="relative rounded-xl p-2.5 text-stone-700 transition hover:bg-stone-100" aria-label="เปิดตะกร้าสินค้า">
                                     <svg className="h-5.5 w-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                     </svg>

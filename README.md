@@ -8,6 +8,7 @@
 4. ใน Authentication > Providers เปิด Email และตั้งค่าให้เหมาะกับการใช้งาน (สามารถปิด Confirm email ระหว่างทดสอบได้)
 5. สมัครสมาชิกบัญชีแรกผ่านหน้าเว็บ แล้วรันคำสั่งท้ายไฟล์ SQL เพื่อกำหนดบัญชีนั้นเป็น `admin`
 6. หากใช้ปุ่มจัดการผู้ดูแล ให้ deploy Edge Functions: `supabase functions deploy create-admin` และ `supabase functions deploy delete-admin` (secret `SUPABASE_SERVICE_ROLE_KEY` มีอยู่ใน Supabase Edge Functions โดยอัตโนมัติ)
+7. เมื่อต้องการใช้สต็อกแยกไซซ์, คูปอง, รายการโปรด และอัปโหลดรูป ให้รัน [`supabase/migrations/20260717_store_advanced.sql`](./supabase/migrations/20260717_store_advanced.sql) เพิ่มเติมหนึ่งครั้ง
 
 ห้ามใส่ `service_role` key ลงใน `.env` ของเว็บเด็ดขาด เพราะ key นี้ใช้ฝั่งเซิร์ฟเวอร์เท่านั้น
 

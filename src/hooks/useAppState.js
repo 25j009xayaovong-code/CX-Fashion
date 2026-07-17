@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DEFAULT_PROFILE } from '../utils/constants';
-import { convertFileToBase64, generateOrderId, convertThaiDateToISO } from '../utils/helpers';
+import { generateOrderId, convertThaiDateToISO } from '../utils/helpers';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 export function useAppState() {
@@ -50,6 +50,10 @@ export function useAppState() {
     // --- Customer States ---
     const [customerCategory, setCustomerCategory] = useState('ทั้งหมด');
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [customerPriceRange, setCustomerPriceRange] = useState({ min: '', max: '' });
+    const [customerInStockOnly, setCustomerInStockOnly] = useState(false);
+    const [customerSort, setCustomerSort] = useState('newest');
+    const [favoriteProductIds, setFavoriteProductIds] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [checkoutName, setCheckoutName] = useState('');
     const [checkoutPhone, setCheckoutPhone] = useState('');
@@ -72,6 +76,8 @@ export function useAppState() {
     const [customerAccountSearch, setCustomerAccountSearch] = useState('');
     const [newAdminUsername, setNewAdminUsername] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
+    const [isCouponManagementViewOpen, setIsCouponManagementViewOpen] = useState(false);
+    const [newCoupon, setNewCoupon] = useState({ code: '', label: '', type: 'percent', value: '10', minimumOrder: '', usageLimit: '', expiresAt: '' });
 
     // --- Add Product States ---
     const [newProduct, setNewProduct] = useState({
@@ -81,7 +87,8 @@ export function useAppState() {
         img: '',
         stock: '',
         description: '',
-        sizes: 'S, M, L, XL'
+        sizes: 'S, M, L, XL',
+        variantStocks: 'S: 0, M: 0, L: 0, XL: 0'
     });
     const [customCategoryInput, setCustomCategoryInput] = useState('');
     const [newProductImagePreview, setNewProductImagePreview] = useState('');
@@ -100,13 +107,16 @@ export function useAppState() {
     const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
     const defaultDropdownCategories = ['เสื้อผ้า', 'รองเท้า', 'หมวก', 'แว่นตา', 'การ์ตูน'];
     const dropdownOptions = Array.from(new Set([...defaultDropdownCategories, ...uniqueCategories]));
-    const allCategoryTabs = ['ทั้งหมด', ...uniqueCategories];
+    const allCategoryTabs = ['ทั้งหมด', 'รายการโปรด', ...uniqueCategories];
 
     const filteredProductsForCustomer = products.filter(p => {
-        const matchesCategory = customerCategory === 'ทั้งหมด' || p.category === customerCategory;
+        const matchesCategory = customerCategory === 'ทั้งหมด' || (customerCategory === 'รายการโปรด' ? favoriteProductIds.includes(p.id) : p.category === customerCategory);
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+        const matchesMin = !customerPriceRange.min || p.price >= Number(customerPriceRange.min);
+        const matchesMax = !customerPriceRange.max || p.price <= Number(customerPriceRange.max);
+        const matchesStock = !customerInStockOnly || p.stock > 0;
+        return matchesCategory && matchesSearch && matchesMin && matchesMax && matchesStock;
+    }).sort((a, b) => customerSort === 'price-low' ? a.price - b.price : customerSort === 'price-high' ? b.price - a.price : b.id - a.id);
 
     const filteredProductsForSeller = products.filter(p => {
         const matchesCategory = sellerCategory === 'ทั้งหมด' || p.category === sellerCategory;
@@ -143,11 +153,8 @@ export function useAppState() {
         return matchesSearch && matchesDateRange;
     });
 
-    const couponRules = {
-        SAVE10: { code: 'SAVE10', label: 'ส่วนลด 10%', type: 'percent', value: 10 },
-        SAVE15: { code: 'SAVE15', label: 'ส่วนลด 15%', type: 'percent', value: 15 },
-        FREESHIP: { code: 'FREESHIP', label: 'ค่าจัดส่งฟรี', type: 'shipping', value: 0 }
-    };
+    const [coupons, setCoupons] = useState([]);
+    const couponRules = Object.fromEntries(coupons.map((coupon) => [coupon.code, { code: coupon.code, label: coupon.label, type: coupon.type, value: coupon.value, minimumOrder: coupon.minimum_order, expiresAt: coupon.expires_at, usageLimit: coupon.usage_limit, usedCount: coupon.used_count }]));
 
     const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const discountAmount = appliedCoupon?.type === 'percent'
@@ -162,6 +169,11 @@ export function useAppState() {
         totalOrders: orders.length,
         totalSales: orders.reduce((sum, order) => sum + (order.total || 0), 0)
     };
+    const sellerSalesByDay = Array.from({ length: 7 }, (_, index) => {
+        const date = new Date(); date.setDate(date.getDate() - (6 - index));
+        const dayKey = date.toLocaleDateString('en-CA');
+        return { label: date.toLocaleDateString('th-TH', { weekday: 'short' }), total: orders.filter((order) => new Date(order.createdAt || order.date).toLocaleDateString('en-CA') === dayKey).reduce((sum, order) => sum + order.total, 0) };
+    });
 
     const customerOrders = orders.filter(order => {
         if (currentUser?.id) {
@@ -175,7 +187,8 @@ export function useAppState() {
         ...product,
         img: product.image_url,
         description: product.description || '',
-        sizes: Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['One size']
+        variants: product.product_variants || [],
+        sizes: (product.product_variants || []).length ? product.product_variants.map((variant) => variant.size) : (Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['One size'])
     });
     const toProfile = (profile) => ({
         displayName: profile.display_name,
@@ -186,23 +199,25 @@ export function useAppState() {
     });
     const refreshStore = async () => {
         if (!supabase) return;
-        const [{ data: productData, error: productError }, { data: orderData, error: orderError }] = await Promise.all([
-            supabase.from('products').select('*').order('id'),
-            supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false })
+        const [{ data: productData, error: productError }, { data: orderData, error: orderError }, { data: couponData }] = await Promise.all([
+            supabase.from('products').select('*, product_variants(*)').order('id'),
+            supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }),
+            supabase.from('coupons').select('*').order('created_at', { ascending: false })
         ]);
         if (productError || orderError) {
             showAlert('โหลดข้อมูลไม่สำเร็จ', productError?.message || orderError?.message || 'กรุณาลองใหม่อีกครั้ง');
             return;
         }
         setProducts((productData || []).map(toProduct));
+        setCoupons(couponData || []);
         setOrders((orderData || []).map((order) => ({
             orderId: order.order_number,
             date: new Date(order.created_at).toLocaleDateString('th-TH'),
             time: new Date(order.created_at).toLocaleTimeString('th-TH'),
             buyer: order.buyer, username: order.user_id, contact: order.contact, address: order.address,
             payment: order.payment, subtotal: order.subtotal, discountAmount: order.discount_amount,
-            shippingFee: order.shipping_fee, coupon: order.coupon, couponLabel: order.coupon_label, total: order.total,
-            items: (order.order_items || []).map((item) => ({ id: item.product_id, name: item.name, price: item.price, qty: item.quantity, size: item.size, img: item.image_url }))
+            shippingFee: order.shipping_fee, coupon: order.coupon, couponLabel: order.coupon_label, total: order.total, status: order.status, trackingNumber: order.tracking_number, createdAt: order.created_at,
+            items: (order.order_items || []).map((item) => ({ id: item.product_id, variantId: item.variant_id, name: item.name, price: item.price, qty: item.quantity, size: item.size, img: item.image_url }))
         })));
     };
     const loadAccount = async (user) => {
@@ -217,6 +232,8 @@ export function useAppState() {
         setCheckoutPhone(nextProfile.phone);
         setCheckoutAddress(nextProfile.address);
         setCheckoutPayment(nextProfile.defaultPayment);
+        const { data: favorites } = await supabase.from('favorites').select('product_id').eq('user_id', user.id);
+        setFavoriteProductIds((favorites || []).map((favorite) => favorite.product_id));
         if (profile.role === 'admin') {
             const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
             setAdminAccounts((profiles || []).filter((account) => account.role === 'admin').map((account) => ({ username: account.username })));
@@ -323,6 +340,41 @@ export function useAppState() {
         showAlert('ลบคูปองแล้ว', 'โค้ดส่วนลดถูกลบออกจากคำสั่งซื้อนี้แล้ว');
     };
 
+    const toggleFavorite = async (productId) => {
+        if (!supabase || !currentUser?.id) { showAlert('กรุณาเข้าสู่ระบบ', 'เข้าสู่ระบบเพื่อบันทึกรายการโปรดของคุณ'); return; }
+        const isFavorite = favoriteProductIds.includes(productId);
+        const request = isFavorite
+            ? supabase.from('favorites').delete().eq('user_id', currentUser.id).eq('product_id', productId)
+            : supabase.from('favorites').insert({ user_id: currentUser.id, product_id: productId });
+        const { error } = await request;
+        if (error) { showAlert('บันทึกรายการโปรดไม่สำเร็จ', error.message); return; }
+        setFavoriteProductIds((ids) => isFavorite ? ids.filter((id) => id !== productId) : [...ids, productId]);
+    };
+
+    const updateOrderStatus = async (orderId, status, trackingNumber) => {
+        const { error } = await supabase.from('orders').update({ status, tracking_number: trackingNumber || null }).eq('order_number', orderId);
+        if (error) { showAlert('อัปเดตออเดอร์ไม่สำเร็จ', error.message); return; }
+        await refreshStore();
+        showAlert('อัปเดตแล้ว', 'บันทึกสถานะออเดอร์เรียบร้อยแล้ว');
+    };
+
+    const handleCreateCoupon = async (e) => {
+        e.preventDefault();
+        const code = newCoupon.code.trim().toUpperCase();
+        if (!code || !newCoupon.label.trim()) { showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกรหัสและชื่อคูปอง'); return; }
+        const { error } = await supabase.from('coupons').insert({ code, label: newCoupon.label.trim(), type: newCoupon.type, value: Number(newCoupon.value || 0), minimum_order: Number(newCoupon.minimumOrder || 0), usage_limit: newCoupon.usageLimit ? Number(newCoupon.usageLimit) : null, expires_at: newCoupon.expiresAt || null });
+        if (error) { showAlert('สร้างคูปองไม่สำเร็จ', error.message); return; }
+        setNewCoupon({ code: '', label: '', type: 'percent', value: '10', minimumOrder: '', usageLimit: '', expiresAt: '' });
+        await refreshStore();
+        showAlert('สร้างคูปองแล้ว', `คูปอง ${code} พร้อมใช้งาน`);
+    };
+
+    const toggleCoupon = async (coupon) => {
+        const { error } = await supabase.from('coupons').update({ active: !coupon.active }).eq('code', coupon.code);
+        if (error) { showAlert('อัปเดตคูปองไม่สำเร็จ', error.message); return; }
+        await refreshStore();
+    };
+
     const handleCreateAdmin = async (e) => {
         e.preventDefault();
         if (currentUser?.isAdmin !== true) {
@@ -422,30 +474,33 @@ export function useAppState() {
     };
 
     // --- Customer Functions ---
-    const addToCart = (product, quantity = 1, size = null) => {
+    const addToCart = (product, quantity = 1, size = null, variantId = null) => {
         const currentInStore = products.find(p => p.id === product.id);
         const selectedSize = size || product.sizes?.[0] || 'One size';
-        const cartKey = `${product.id}:${selectedSize}`;
+        const selectedVariant = currentInStore?.variants?.find((variant) => variant.id === variantId || variant.size === selectedSize);
+        const resolvedVariantId = variantId || selectedVariant?.id || null;
+        const cartKey = `${product.id}:${resolvedVariantId || selectedSize}`;
         const getCartKey = (item) => item.cartKey || `${item.id}:${item.size || item.sizes?.[0] || 'One size'}`;
         const inCart = cart.find(item => getCartKey(item) === cartKey);
-        const currentCartQty = cart.filter(item => item.id === product.id).reduce((sum, item) => sum + item.qty, 0);
+        const currentCartQty = cart.filter(item => (resolvedVariantId ? item.variantId === resolvedVariantId : item.id === product.id)).reduce((sum, item) => sum + item.qty, 0);
         const requestedQty = Math.max(1, Number(quantity) || 1);
 
-        if (!currentInStore || currentInStore.stock < currentCartQty + requestedQty) {
+        const availableStock = selectedVariant?.stock ?? currentInStore?.stock;
+        if (!currentInStore || availableStock < currentCartQty + requestedQty) {
             showAlert('สินค้าหมดคลัง', `ขออภัยครับ สินค้า "${product.name}" ในคลังหมดแล้ว`);
             return;
         }
 
         if (inCart) {
-            setCart(cart.map(item => getCartKey(item) === cartKey ? { ...inCart, cartKey, size: selectedSize, qty: inCart.qty + requestedQty } : item));
+            setCart(cart.map(item => getCartKey(item) === cartKey ? { ...inCart, cartKey, size: selectedSize, variantId: resolvedVariantId, qty: inCart.qty + requestedQty } : item));
         } else {
-            setCart([...cart, { ...product, size: selectedSize, cartKey, qty: requestedQty }]);
+            setCart([...cart, { ...product, size: selectedSize, variantId: resolvedVariantId, cartKey, qty: requestedQty }]);
         }
         showAlert('สำเร็จ!', `เพิ่ม "${product.name}" จำนวน ${requestedQty} ชิ้นลงในตะกร้าแล้ว`);
     };
 
     const removeFromCart = (product) => {
-        const cartKey = product.cartKey || `${product.id}:${product.size || product.sizes?.[0] || 'One size'}`;
+        const cartKey = product.cartKey || `${product.id}:${product.variantId || product.size || product.sizes?.[0] || 'One size'}`;
         const getCartKey = (item) => item.cartKey || `${item.id}:${item.size || item.sizes?.[0] || 'One size'}`;
         const exist = cart.find(item => getCartKey(item) === cartKey);
         if (!exist || exist.qty === 1) {
@@ -466,7 +521,8 @@ export function useAppState() {
 
         for (const item of cart) {
             const currentInStore = products.find(p => p.id === item.id);
-            if (!currentInStore || currentInStore.stock < item.qty) {
+            const variant = currentInStore?.variants?.find((entry) => entry.id === item.variantId);
+            if (!currentInStore || (variant?.stock ?? currentInStore.stock) < item.qty) {
                 canCheckout = false;
                 outOfStockItemName = item.name;
                 break;
@@ -519,11 +575,19 @@ export function useAppState() {
     };
 
     // --- Seller Functions ---
-    const adjustStock = async (id, amount) => {
+    const adjustStock = async (id, amount, variantId = null) => {
         const product = products.find((item) => item.id === id);
         if (!product || !supabase) return;
-        const { error } = await supabase.from('products').update({ stock: Math.max(0, product.stock + amount) }).eq('id', id);
-        if (error) { showAlert('อัปเดตสต็อกไม่สำเร็จ', error.message); return; }
+        const variant = product.variants?.find((entry) => entry.id === variantId) || product.variants?.[0];
+        if (variant) {
+            const { error } = await supabase.from('product_variants').update({ stock: Math.max(0, variant.stock + amount) }).eq('id', variant.id);
+            if (error) { showAlert('อัปเดตสต็อกไม่สำเร็จ', error.message); return; }
+            const nextTotal = product.variants.reduce((sum, entry) => sum + (entry.id === variant.id ? Math.max(0, entry.stock + amount) : entry.stock), 0);
+            await supabase.from('products').update({ stock: nextTotal }).eq('id', id);
+        } else {
+            const { error } = await supabase.from('products').update({ stock: Math.max(0, product.stock + amount) }).eq('id', id);
+            if (error) { showAlert('อัปเดตสต็อกไม่สำเร็จ', error.message); return; }
+        }
         await refreshStore();
     };
 
@@ -538,9 +602,27 @@ export function useAppState() {
         });
     };
 
+    const parseVariantStocks = (sizesInput, stocksInput, fallbackStock = 0) => {
+        const sizes = String(sizesInput || 'One size').split(',').map((size) => size.trim()).filter(Boolean);
+        const stockBySize = Object.fromEntries(String(stocksInput || '').split(',').map((entry) => entry.trim()).filter(Boolean).map((entry) => {
+            const [size, stock] = entry.split(':');
+            return [size?.trim(), Math.max(0, Number(stock?.trim()) || 0)];
+        }));
+        return sizes.map((size, index) => ({ size, stock: stockBySize[size] ?? (sizes.length === 1 ? Number(fallbackStock) || 0 : index === 0 ? Number(fallbackStock) || 0 : 0) }));
+    };
+
+    const uploadProductImage = async (file, fallbackImage) => {
+        if (!file) return fallbackImage;
+        const extension = file.name.split('.').pop() || 'jpg';
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+        const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: false, contentType: file.type });
+        if (error) throw error;
+        return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    };
+
     const handleAddProduct = async (e) => {
         e.preventDefault();
-        if (!newProduct.name.trim() || newProduct.price === '' || newProduct.stock === '') {
+        if (!newProduct.name.trim() || newProduct.price === '') {
             showAlert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลหลักให้ครบถ้วนด้วยครับ');
             return;
         }
@@ -558,34 +640,38 @@ export function useAppState() {
         const fileInput = document.getElementById('newProductImage');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             try {
-                finalImage = await convertFileToBase64(fileInput.files[0]);
+                finalImage = await uploadProductImage(fileInput.files[0], finalImage);
             } catch (error) {
-                console.error('Error converting image:', error);
+                showAlert('อัปโหลดรูปไม่สำเร็จ', error.message);
+                return;
             }
         } else if (newProduct.img) {
             finalImage = newProduct.img;
         }
 
+        const variants = parseVariantStocks(newProduct.sizes, newProduct.variantStocks, newProduct.stock);
         const createdProduct = {
             name: newProduct.name,
             price: Number(newProduct.price),
             category: finalCategory,
             image_url: finalImage,
-            stock: Number(newProduct.stock),
+            stock: variants.reduce((sum, variant) => sum + variant.stock, 0),
             description: newProduct.description.trim(),
-            sizes: newProduct.sizes.split(',').map((size) => size.trim()).filter(Boolean)
+            sizes: variants.map((variant) => variant.size)
         };
-        const { error } = await supabase.from('products').insert(createdProduct);
+        const { data: insertedProduct, error } = await supabase.from('products').insert(createdProduct).select('id').single();
         if (error) { showAlert('เพิ่มสินค้าไม่สำเร็จ', error.message); return; }
+        const { error: variantError } = await supabase.from('product_variants').insert(variants.map((variant) => ({ ...variant, product_id: insertedProduct.id })));
+        if (variantError) { showAlert('เพิ่มไซซ์ไม่สำเร็จ', variantError.message); return; }
         await refreshStore();
-        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '', description: '', sizes: 'S, M, L, XL' });
+        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '', description: '', sizes: 'S, M, L, XL', variantStocks: 'S: 0, M: 0, L: 0, XL: 0' });
         setCustomCategoryInput('');
         setNewProductImagePreview('');
         showAlert('สำเร็จ!', `เพิ่มสินค้าใหม่ในหมวดหมู่ "${finalCategory}" แล้ว`);
     };
 
     const startEditingProduct = (product) => {
-        setEditingProduct({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes || '' });
+        setEditingProduct({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes || '', variantStocks: (product.variants || []).map((variant) => `${variant.size}: ${variant.stock}`).join(', ') });
         setEditCategoryInput('');
         setEditProductImagePreview(product.img);
     };
@@ -610,22 +696,28 @@ export function useAppState() {
         const fileInput = document.getElementById('editProductImage');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             try {
-                finalImage = await convertFileToBase64(fileInput.files[0]);
+                finalImage = await uploadProductImage(fileInput.files[0], finalImage);
             } catch (error) {
-                console.error('Error converting image:', error);
+                showAlert('อัปโหลดรูปไม่สำเร็จ', error.message);
+                return;
             }
         }
 
+        const variants = parseVariantStocks(editingProduct.sizes, editingProduct.variantStocks, editingProduct.stock);
         const { error } = await supabase.from('products').update({
             name: editingProduct.name,
             price: Number(editingProduct.price),
-            stock: Number(editingProduct.stock),
+            stock: variants.reduce((sum, variant) => sum + variant.stock, 0),
             category: finalCategory,
             image_url: finalImage,
             description: (editingProduct.description || '').trim(),
-            sizes: String(editingProduct.sizes || '').split(',').map((size) => size.trim()).filter(Boolean)
+            sizes: variants.map((variant) => variant.size)
         }).eq('id', editingProduct.id);
         if (error) { showAlert('อัปเดตสินค้าไม่สำเร็จ', error.message); return; }
+        const { error: deleteVariantsError } = await supabase.from('product_variants').delete().eq('product_id', editingProduct.id);
+        if (deleteVariantsError) { showAlert('อัปเดตไซซ์ไม่สำเร็จ', deleteVariantsError.message); return; }
+        const { error: variantError } = await supabase.from('product_variants').insert(variants.map((variant) => ({ ...variant, product_id: editingProduct.id })));
+        if (variantError) { showAlert('อัปเดตไซซ์ไม่สำเร็จ', variantError.message); return; }
         await refreshStore();
         setEditingProduct(null);
         setEditProductImagePreview('');
@@ -702,6 +794,10 @@ export function useAppState() {
         passwordInput, setPasswordInput,
         customerCategory, setCustomerCategory,
         selectedProduct, setSelectedProduct,
+        customerPriceRange, setCustomerPriceRange,
+        customerInStockOnly, setCustomerInStockOnly,
+        customerSort, setCustomerSort,
+        favoriteProductIds,
         isCartOpen, setIsCartOpen,
         checkoutName, setCheckoutName,
         checkoutPhone, setCheckoutPhone,
@@ -721,6 +817,8 @@ export function useAppState() {
         isAddProductViewOpen, setIsAddProductViewOpen,
         isInventoryViewOpen, setIsInventoryViewOpen,
         isAdminManagementViewOpen, setIsAdminManagementViewOpen,
+        isCouponManagementViewOpen, setIsCouponManagementViewOpen,
+        newCoupon, setNewCoupon,
         orderDateFilter, setOrderDateFilter,
         orderDateFrom, setOrderDateFrom,
         orderDateTo, setOrderDateTo,
@@ -740,12 +838,15 @@ export function useAppState() {
         filteredCustomerAccounts,
         filteredOrders,
         sellerStats,
+        sellerSalesByDay,
+        coupons,
         showAlert,
         showConfirm,
         closeNotification,
         clearAllFilters,
         applyCoupon,
         removeCoupon,
+        toggleFavorite,
         customerOrders,
         handleSellerAccess,
         handleAuthSubmit,
@@ -761,6 +862,9 @@ export function useAppState() {
         handleSaveEditProduct,
         handleClearOrders,
         handleDeleteSingleOrder,
+        updateOrderStatus,
+        handleCreateCoupon,
+        toggleCoupon,
         handleCreateAdmin,
         handleDeleteAdmin,
         handleSaveSettings,
