@@ -49,6 +49,7 @@ export function useAppState() {
 
     // --- Customer States ---
     const [customerCategory, setCustomerCategory] = useState('ทั้งหมด');
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [checkoutName, setCheckoutName] = useState('');
     const [checkoutPhone, setCheckoutPhone] = useState('');
@@ -78,7 +79,9 @@ export function useAppState() {
         price: '',
         category: 'เสื้อผ้า',
         img: '',
-        stock: ''
+        stock: '',
+        description: '',
+        sizes: 'S, M, L, XL'
     });
     const [customCategoryInput, setCustomCategoryInput] = useState('');
     const [newProductImagePreview, setNewProductImagePreview] = useState('');
@@ -168,7 +171,12 @@ export function useAppState() {
     });
 
     // --- Supabase data loading ---
-    const toProduct = (product) => ({ ...product, img: product.image_url });
+    const toProduct = (product) => ({
+        ...product,
+        img: product.image_url,
+        description: product.description || '',
+        sizes: Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['One size']
+    });
     const toProfile = (profile) => ({
         displayName: profile.display_name,
         email: profile.email || '',
@@ -194,7 +202,7 @@ export function useAppState() {
             buyer: order.buyer, username: order.user_id, contact: order.contact, address: order.address,
             payment: order.payment, subtotal: order.subtotal, discountAmount: order.discount_amount,
             shippingFee: order.shipping_fee, coupon: order.coupon, couponLabel: order.coupon_label, total: order.total,
-            items: (order.order_items || []).map((item) => ({ id: item.product_id, name: item.name, price: item.price, qty: item.quantity, img: item.image_url }))
+            items: (order.order_items || []).map((item) => ({ id: item.product_id, name: item.name, price: item.price, qty: item.quantity, size: item.size, img: item.image_url }))
         })));
     };
     const loadAccount = async (user) => {
@@ -414,10 +422,13 @@ export function useAppState() {
     };
 
     // --- Customer Functions ---
-    const addToCart = (product, quantity = 1) => {
+    const addToCart = (product, quantity = 1, size = null) => {
         const currentInStore = products.find(p => p.id === product.id);
-        const inCart = cart.find(item => item.id === product.id);
-        const currentCartQty = inCart ? inCart.qty : 0;
+        const selectedSize = size || product.sizes?.[0] || 'One size';
+        const cartKey = `${product.id}:${selectedSize}`;
+        const getCartKey = (item) => item.cartKey || `${item.id}:${item.size || item.sizes?.[0] || 'One size'}`;
+        const inCart = cart.find(item => getCartKey(item) === cartKey);
+        const currentCartQty = cart.filter(item => item.id === product.id).reduce((sum, item) => sum + item.qty, 0);
         const requestedQty = Math.max(1, Number(quantity) || 1);
 
         if (!currentInStore || currentInStore.stock < currentCartQty + requestedQty) {
@@ -426,19 +437,21 @@ export function useAppState() {
         }
 
         if (inCart) {
-            setCart(cart.map(item => item.id === product.id ? { ...inCart, qty: inCart.qty + requestedQty } : item));
+            setCart(cart.map(item => getCartKey(item) === cartKey ? { ...inCart, cartKey, size: selectedSize, qty: inCart.qty + requestedQty } : item));
         } else {
-            setCart([...cart, { ...product, qty: requestedQty }]);
+            setCart([...cart, { ...product, size: selectedSize, cartKey, qty: requestedQty }]);
         }
         showAlert('สำเร็จ!', `เพิ่ม "${product.name}" จำนวน ${requestedQty} ชิ้นลงในตะกร้าแล้ว`);
     };
 
     const removeFromCart = (product) => {
-        const exist = cart.find(item => item.id === product.id);
+        const cartKey = product.cartKey || `${product.id}:${product.size || product.sizes?.[0] || 'One size'}`;
+        const getCartKey = (item) => item.cartKey || `${item.id}:${item.size || item.sizes?.[0] || 'One size'}`;
+        const exist = cart.find(item => getCartKey(item) === cartKey);
         if (!exist || exist.qty === 1) {
-            setCart(cart.filter(item => item.id !== product.id));
+            setCart(cart.filter(item => getCartKey(item) !== cartKey));
         } else {
-            setCart(cart.map(item => item.id === product.id ? { ...exist, qty: exist.qty - 1 } : item));
+            setCart(cart.map(item => getCartKey(item) === cartKey ? { ...exist, cartKey, qty: exist.qty - 1 } : item));
         }
     };
 
@@ -558,19 +571,21 @@ export function useAppState() {
             price: Number(newProduct.price),
             category: finalCategory,
             image_url: finalImage,
-            stock: Number(newProduct.stock)
+            stock: Number(newProduct.stock),
+            description: newProduct.description.trim(),
+            sizes: newProduct.sizes.split(',').map((size) => size.trim()).filter(Boolean)
         };
         const { error } = await supabase.from('products').insert(createdProduct);
         if (error) { showAlert('เพิ่มสินค้าไม่สำเร็จ', error.message); return; }
         await refreshStore();
-        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '' });
+        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '', description: '', sizes: 'S, M, L, XL' });
         setCustomCategoryInput('');
         setNewProductImagePreview('');
         showAlert('สำเร็จ!', `เพิ่มสินค้าใหม่ในหมวดหมู่ "${finalCategory}" แล้ว`);
     };
 
     const startEditingProduct = (product) => {
-        setEditingProduct({ ...product });
+        setEditingProduct({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes || '' });
         setEditCategoryInput('');
         setEditProductImagePreview(product.img);
     };
@@ -606,7 +621,9 @@ export function useAppState() {
             price: Number(editingProduct.price),
             stock: Number(editingProduct.stock),
             category: finalCategory,
-            image_url: finalImage
+            image_url: finalImage,
+            description: (editingProduct.description || '').trim(),
+            sizes: String(editingProduct.sizes || '').split(',').map((size) => size.trim()).filter(Boolean)
         }).eq('id', editingProduct.id);
         if (error) { showAlert('อัปเดตสินค้าไม่สำเร็จ', error.message); return; }
         await refreshStore();
@@ -684,6 +701,7 @@ export function useAppState() {
         usernameInput, setUsernameInput,
         passwordInput, setPasswordInput,
         customerCategory, setCustomerCategory,
+        selectedProduct, setSelectedProduct,
         isCartOpen, setIsCartOpen,
         checkoutName, setCheckoutName,
         checkoutPhone, setCheckoutPhone,

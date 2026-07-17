@@ -356,6 +356,10 @@ function SellerView({ state }) {
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ชื่อสินค้า *</label>
                                 <input type="text" required value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} placeholder="เช่น เสื้อโค้ทกันหนาวสไตล์เกาหลี" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รายละเอียดสินค้า</label>
+                                <textarea rows="3" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="บอกเนื้อผ้า ทรง หรือจุดเด่นของสินค้า..." className="w-full resize-none px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ราคา (บาท) *</label>
@@ -378,6 +382,11 @@ function SellerView({ state }) {
                                         <input type="text" required={newProduct.category === 'CUSTOM_OPTION'} value={customCategoryInput} onChange={(e) => setCustomCategoryInput(e.target.value)} placeholder="เช่น กระเป๋า, อุปกรณ์เสริม" className="w-full px-3 py-2 rounded-lg border border-purple-200 text-xs focus:border-purple-500 focus:outline-none bg-white" />
                                     </div>
                                 )}
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ไซซ์ที่มีจำหน่าย</label>
+                                <input type="text" value={newProduct.sizes} onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })} placeholder="เช่น S, M, L, XL หรือ One size" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                                <p className="mt-1 text-[10px] text-gray-400">คั่นแต่ละไซซ์ด้วยเครื่องหมายจุลภาค (,)</p>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รูปภาพสินค้า</label>
@@ -485,6 +494,10 @@ function SellerView({ state }) {
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ชื่อสินค้า *</label>
                                 <input type="text" required value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รายละเอียดสินค้า</label>
+                                <textarea rows="3" value={editingProduct.description || ''} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} placeholder="บอกเนื้อผ้า ทรง หรือจุดเด่นของสินค้า..." className="w-full resize-none px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ราคา (บาท) *</label>
@@ -507,6 +520,11 @@ function SellerView({ state }) {
                                         <input type="text" required={editingProduct.category === 'CUSTOM_OPTION'} value={editCategoryInput} onChange={(e) => setEditCategoryInput(e.target.value)} placeholder="เช่น กระเป๋า, อุปกรณ์เสริม" className="w-full px-3 py-2 rounded-lg border border-purple-200 text-xs focus:border-purple-500 focus:outline-none bg-white" />
                                     </div>
                                 )}
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ไซซ์ที่มีจำหน่าย</label>
+                                <input type="text" value={editingProduct.sizes || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sizes: e.target.value })} placeholder="เช่น S, M, L, XL หรือ One size" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                                <p className="mt-1 text-[10px] text-gray-400">คั่นแต่ละไซซ์ด้วยเครื่องหมายจุลภาค (,)</p>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">เปลี่ยนรูปภาพสินค้า</label>

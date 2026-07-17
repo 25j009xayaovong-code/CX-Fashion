@@ -19,6 +19,8 @@ create table if not exists public.products (
   price integer not null check (price >= 0),
   category text not null,
   image_url text not null,
+  description text not null default '',
+  sizes text[] not null default array['One size'],
   stock integer not null default 0 check (stock >= 0),
   created_at timestamptz not null default now()
 );
@@ -47,6 +49,7 @@ create table if not exists public.order_items (
   name text not null,
   price integer not null check (price >= 0),
   quantity integer not null check (quantity > 0),
+  size text,
   image_url text
 );
 
@@ -99,8 +102,8 @@ begin
   values (order_id, payload ->> 'orderId', auth.uid(), payload ->> 'buyer', payload ->> 'contact', payload ->> 'address', payload ->> 'payment', (payload ->> 'subtotal')::integer, (payload ->> 'discountAmount')::integer, (payload ->> 'shippingFee')::integer, payload ->> 'coupon', payload ->> 'couponLabel', (payload ->> 'total')::integer);
   for item in select * from jsonb_array_elements(payload -> 'items') loop
     update public.products set stock = stock - (item ->> 'qty')::integer where id = (item ->> 'id')::bigint;
-    insert into public.order_items (order_id, product_id, name, price, quantity, image_url)
-    values (order_id, (item ->> 'id')::bigint, item ->> 'name', (item ->> 'price')::integer, (item ->> 'qty')::integer, item ->> 'img');
+    insert into public.order_items (order_id, product_id, name, price, quantity, size, image_url)
+    values (order_id, (item ->> 'id')::bigint, item ->> 'name', (item ->> 'price')::integer, (item ->> 'qty')::integer, item ->> 'size', item ->> 'img');
   end loop;
   return order_id;
 end;
