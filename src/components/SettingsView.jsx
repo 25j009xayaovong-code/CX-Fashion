@@ -4,7 +4,7 @@ function SettingsView({ state }) {
     const {
         userProfile, settingsForm, setSettingsForm, handleSaveSettings,
         currentUser, oldPassword, setOldPassword, newPassword, setNewPassword,
-        handleChangePassword, customerOrders
+        handleChangePassword, customerOrders, favoriteProducts, reorderItems, uploadPaymentProof
     } = state;
 
     return (
@@ -98,10 +98,16 @@ function SettingsView({ state }) {
                                                 )}
                                                 <span className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{order.payment}</span>
                                             </div>
+                                            <div className="mt-3 flex flex-wrap items-center gap-2"><button onClick={() => reorderItems(order.items)} className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-stone-700 hover:border-stone-900">ซื้อซ้ำ</button>{order.paymentProofPath ? <span className="text-[10px] font-bold text-emerald-700">แนบหลักฐานแล้ว</span> : <label className="cursor-pointer rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-bold text-amber-800">แนบหลักฐาน<input type="file" accept="image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) uploadPaymentProof(order.orderId, file); }} /></label>}</div>
                                         </div>
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-xs">
+                            <h4 className="text-sm font-black text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">♥ รายการโปรดของฉัน</h4>
+                            {favoriteProducts.length === 0 ? <p className="rounded-xl bg-gray-50 py-5 text-center text-xs text-gray-400">ยังไม่มีสินค้าในรายการโปรด</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{favoriteProducts.slice(0, 6).map((product) => <div key={product.id} className="rounded-xl border border-gray-100 p-2"><img src={product.img} alt={product.name} className="aspect-square w-full rounded-lg bg-white object-contain p-1" /><p className="mt-2 line-clamp-1 text-[11px] font-bold text-gray-900">{product.name}</p><p className="mt-1 text-[10px] font-black text-amber-700">฿{product.price.toLocaleString()}</p></div>)}</div>}
                         </div>
 
                         <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-xs">

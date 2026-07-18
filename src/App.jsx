@@ -4,6 +4,7 @@ import Header from './components/Header';
 import CustomerView from './components/CustomerView';
 import SellerView from './components/SellerView';
 import SettingsView from './components/SettingsView';
+import StoreInfoView from './components/StoreInfoView';
 
 function App() {
   const state = useAppState();
@@ -21,6 +22,8 @@ function App() {
         return <SettingsView state={state} />;
       case 'seller':
         return <SellerView state={state} />;
+      case 'about':
+        return <StoreInfoView />;
       case 'customer':
       default:
         return <CustomerView state={state} />;
@@ -39,6 +42,7 @@ function App() {
         <div className="container mx-auto px-6">
           <p className="font-bold tracking-wide text-stone-300">© 2026 FASHION STORE</p>
           <p className="mt-1 text-[10px]">Curated styles for your everyday.</p>
+          <button onClick={() => state.setViewMode('about')} className="mt-3 text-[10px] font-bold text-amber-200 underline underline-offset-4">เกี่ยวกับร้าน · การจัดส่ง · คืนสินค้า · คำถามที่พบบ่อย</button>
         </div>
       </footer>
     </div>

@@ -11,7 +11,8 @@ function Header({ state }) {
         usernameInput, setUsernameInput,
         passwordInput, setPasswordInput,
         handleAuthSubmit,
-        notification, closeNotification
+        notification, closeNotification,
+        notifications, unreadNotificationCount, isNotificationOpen, setIsNotificationOpen, markNotificationsRead
     } = state;
 
     const isAdminUser = currentUser?.isAdmin === true;
@@ -30,7 +31,7 @@ function Header({ state }) {
                     </div>
 
                     <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:gap-4">
-                        {viewMode !== 'settings' && !isOrderViewOpen && (
+                        {viewMode !== 'settings' && viewMode !== 'about' && !isOrderViewOpen && (
                             <div className="relative min-w-0 flex-1 sm:flex-none">
                                 <input
                                     type="text"
@@ -46,6 +47,8 @@ function Header({ state }) {
                         )}
 
                         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                            {!isAdminUser && <button onClick={() => { setViewMode('about'); setSearchQuery(''); setIsOrderViewOpen(false); }} className={`rounded-xl border px-2.5 py-2.5 text-[11px] font-bold transition sm:px-3 sm:text-xs ${viewMode === 'about' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}>ข้อมูลร้าน</button>}
+                            {currentUser && <div className="relative"><button onClick={async () => { setIsNotificationOpen(!isNotificationOpen); if (!isNotificationOpen) await markNotificationsRead(); }} className="relative rounded-xl p-2.5 text-stone-700 transition hover:bg-stone-100" aria-label="การแจ้งเตือน">🔔{unreadNotificationCount > 0 && <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-600 px-1 text-[9px] font-black leading-4 text-white">{unreadNotificationCount}</span>}</button>{isNotificationOpen && <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-stone-200 bg-white p-3 shadow-xl"><div className="mb-2 flex items-center justify-between"><p className="text-xs font-black text-stone-950">การแจ้งเตือน</p><button onClick={() => setIsNotificationOpen(false)} className="text-xs text-stone-400">ปิด</button></div>{notifications.length === 0 ? <p className="py-5 text-center text-xs text-stone-500">ยังไม่มีการแจ้งเตือน</p> : <div className="max-h-72 space-y-2 overflow-y-auto">{notifications.map((item) => <article key={item.id} className={`rounded-xl p-3 ${item.is_read ? 'bg-stone-50' : 'bg-amber-50'}`}><p className="text-xs font-bold text-stone-900">{item.title}</p><p className="mt-1 text-[11px] leading-4 text-stone-600">{item.message}</p></article>)}</div>}</div>}</div>}
                             {currentUser && (
                                 <button
                                     onClick={() => { setViewMode('settings'); setSearchQuery(''); setIsOrderViewOpen(false); }}
