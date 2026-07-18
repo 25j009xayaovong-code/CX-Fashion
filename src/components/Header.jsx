@@ -5,7 +5,6 @@ function Header({ state }) {
         viewMode, setViewMode, searchQuery, setSearchQuery,
         currentUser, handleLogout, setIsAuthOpen, setAuthMode,
         setIsCartOpen, cart, setIsOrderViewOpen, isOrderViewOpen,
-        selectedProduct, setSelectedProduct,
         isAuthOpen, setIsAuthOpen: closeAuth,
         authMode, setAuthMode: switchAuthMode,
         usernameInput, setUsernameInput,
@@ -18,26 +17,26 @@ function Header({ state }) {
 
     return (
         <>
-            <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/95 shadow-sm backdrop-blur">
-                <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 py-3 sm:flex-row sm:gap-4 sm:px-6 sm:py-4">
-                    <div className="flex w-full items-center justify-between sm:w-auto">
+            <header className="bg-white shadow-sm sticky top-0 z-40">
+                <div className="container mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center space-x-5 justify-between w-full sm:w-auto">
                         <h1
                             onClick={() => { setViewMode('customer'); setSearchQuery(''); setIsOrderViewOpen(false); }}
-                            className="cursor-pointer select-none text-lg font-black tracking-tight text-stone-950 sm:text-xl sm:tracking-wider"
+                            className="text-xl font-black text-gray-950 tracking-wider cursor-pointer select-none"
                         >
                             FASHION STORE
                         </h1>
                     </div>
 
-                    <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:gap-4">
+                    <div className="flex items-center space-x-4 w-full sm:w-auto justify-end">
                         {viewMode !== 'settings' && !isOrderViewOpen && (
-                            <div className="relative min-w-0 flex-1 sm:flex-none">
+                            <div className="relative flex-1 sm:flex-none">
                                 <input
                                     type="text"
                                     placeholder="ค้นหาไอเท็ม..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full rounded-xl border border-stone-300 py-2.5 pl-9 pr-3 text-xs focus:border-stone-950 focus:outline-none sm:w-56"
+                                    className="w-full sm:w-56 pl-9 pr-4 py-2 text-xs rounded-xl border border-gray-250 focus:outline-none focus:border-gray-500"
                                 />
                                 <svg className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -45,7 +44,7 @@ function Header({ state }) {
                             </div>
                         )}
 
-                        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                        <div className="flex items-center space-x-2">
                             {currentUser && (
                                 <button
                                     onClick={() => { setViewMode('settings'); setSearchQuery(''); setIsOrderViewOpen(false); }}
@@ -57,17 +56,17 @@ function Header({ state }) {
                             )}
 
                             {currentUser ? (
-                                <button onClick={handleLogout} className="rounded-xl border border-red-200 px-2.5 py-2.5 text-[11px] font-bold text-red-500 transition-all hover:bg-red-500 hover:text-white sm:px-3 sm:text-xs">
+                                <button onClick={handleLogout} className="text-xs font-bold text-red-500 hover:text-white border border-red-200 hover:bg-red-500 px-3 py-2.5 rounded-xl transition-all">
                                     ออกจากระบบ
                                 </button>
                             ) : (
-                                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="rounded-xl border border-stone-300 px-2.5 py-2.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-950 hover:text-white sm:px-3.5 sm:text-xs">
+                                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="text-xs font-bold text-gray-700 hover:text-blue-600 border border-gray-250 px-3.5 py-2.5 rounded-xl hover:bg-gray-50 transition">
                                     เข้าสู่ระบบ
                                 </button>
                             )}
 
                             {!isAdminUser && viewMode === 'customer' && (
-                                <button onClick={() => { if (selectedProduct) setSelectedProduct(null); setIsCartOpen(true); }} className="relative rounded-xl p-2.5 text-stone-700 transition hover:bg-stone-100" aria-label="เปิดตะกร้าสินค้า">
+                                <button onClick={() => setIsCartOpen(true)} className="relative p-2.5 text-gray-700 hover:bg-gray-100 rounded-full transition">
                                     <svg className="h-5.5 w-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                     </svg>
@@ -91,17 +90,16 @@ function Header({ state }) {
                         <h3 className="text-xl font-black text-gray-950 mb-1 text-center">
                             {authMode === 'login' ? 'ล็อกอินเข้าสู่ระบบ' : 'สมัครสมาชิกระบบ'}
                         </h3>
-                        <p className="text-[10px] text-gray-400 text-center mb-6">เข้าสู่ระบบเพื่อบันทึกข้อมูลไว้บนคลาวด์ และใช้งานข้ามเครื่องได้</p>
+                        <p className="text-[10px] text-gray-400 text-center mb-6">ล็อกอินเพื่อบันทึกข้อมูลและดึงที่อยู่จัดส่งของคุณขึ้นมาใช้ทันที</p>
 
                         <form onSubmit={handleAuthSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมล</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">ชื่อบัญชีผู้ใช้งาน</label>
                                 <input
                                     type="text"
                                     value={usernameInput}
                                     onChange={(e) => setUsernameInput(e.target.value)}
-                                    placeholder="you@example.com"
-                                    autoComplete="email"
+                                    placeholder="เช่น fashion_admin"
                                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-blue-500 focus:outline-none"
                                 />
                             </div>
@@ -111,13 +109,12 @@ function Header({ state }) {
                                     type="password"
                                     value={passwordInput}
                                     onChange={(e) => setPasswordInput(e.target.value)}
-                                    placeholder="อย่างน้อย 6 ตัวอักษร"
-                                    autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                                    placeholder="******"
                                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-blue-500 focus:outline-none"
                                 />
                             </div>
                             <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow-md transition-all mt-6">
-                                {authMode === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิกใหม่'}
+                                {authMode === 'login' ? 'เข้าสู่ระบบจำลอง' : 'สมัครสมาชิกใหม่'}
                             </button>
                         </form>
 

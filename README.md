@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FASHION STORE
 
 ## เชื่อม Supabase เพื่อใช้ข้อมูลข้ามเครื่อง
@@ -11,6 +12,9 @@
 7. เมื่อต้องการใช้สต็อกแยกไซซ์, คูปอง, รายการโปรด และอัปโหลดรูป ให้รัน [`supabase/migrations/20260717_store_advanced.sql`](./supabase/migrations/20260717_store_advanced.sql) เพิ่มเติมหนึ่งครั้ง
 
 ห้ามใส่ `service_role` key ลงใน `.env` ของเว็บเด็ดขาด เพราะ key นี้ใช้ฝั่งเซิร์ฟเวอร์เท่านั้น
+=======
+# React + Vite
+>>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 

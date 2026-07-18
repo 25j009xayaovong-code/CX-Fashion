@@ -7,12 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+<<<<<<< HEAD
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.6",
+=======
+    "preview": "vite preview"
+  },
+  "dependencies": {
+>>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     "@tailwindcss/postcss": "^4.3.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
@@ -22,10 +28,17 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.5.3",
+<<<<<<< HEAD
     "gh-pages": "^6.3.0",
+=======
+>>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     "oxlint": "^1.71.0",
     "postcss": "^8.5.19",
     "tailwindcss": "^4.3.2",
     "vite": "^8.1.1"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
