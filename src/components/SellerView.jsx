@@ -25,7 +25,7 @@ function SellerView({ state }) {
         handleClearOrders, handleDeleteSingleOrder,
         updateOrderStatus, coupons, newCoupon, setNewCoupon, handleCreateCoupon, toggleCoupon,
         editingProduct, setEditingProduct, editCategoryInput, setEditCategoryInput,
-        editProductImagePreview, setEditProductImagePreview, handleSaveEditProduct
+        editProductImagePreview, setEditProductImagePreview, handleSaveEditProduct, openPaymentProof
     } = state;
 
     const handleNewProductImageChange = (e) => {
@@ -355,6 +355,7 @@ function SellerView({ state }) {
                                             <td className="py-4 px-6">
                                                 <span className="font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-[11px] block w-fit mb-1.5">{order.buyer}</span>
                                                 <span className="text-[10px] text-gray-550 block font-semibold">💳 {order.payment}</span>
+                                                {order.paymentProofPath ? <button onClick={() => openPaymentProof(order.paymentProofPath)} className="mt-1 text-[10px] font-bold text-emerald-700 underline underline-offset-2">ดูหลักฐานการชำระเงิน</button> : <span className="mt-1 block text-[10px] font-bold text-amber-600">ยังไม่แนบหลักฐาน</span>}
                                             </td>
                                             <td className="py-4 px-6">
                                                 <div className="max-w-[200px] text-gray-600 leading-relaxed text-[11px]">
@@ -399,6 +400,10 @@ function SellerView({ state }) {
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รายละเอียดสินค้า</label>
                                 <textarea rows="3" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="บอกเนื้อผ้า ทรง หรือจุดเด่นของสินค้า..." className="w-full resize-none px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สีสินค้า (ใช้สำหรับตัวกรอง)</label>
+                                <input type="text" value={newProduct.color || ''} onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })} placeholder="เช่น ดำ, ขาว, เดนิม" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -540,6 +545,10 @@ function SellerView({ state }) {
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รายละเอียดสินค้า</label>
                                 <textarea rows="3" value={editingProduct.description || ''} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} placeholder="บอกเนื้อผ้า ทรง หรือจุดเด่นของสินค้า..." className="w-full resize-none px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สีสินค้า (ใช้สำหรับตัวกรอง)</label>
+                                <input type="text" value={editingProduct.color || ''} onChange={(e) => setEditingProduct({ ...editingProduct, color: e.target.value })} placeholder="เช่น ดำ, ขาว, เดนิม" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

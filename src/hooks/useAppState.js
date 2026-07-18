@@ -53,7 +53,12 @@ export function useAppState() {
     const [customerPriceRange, setCustomerPriceRange] = useState({ min: '', max: '' });
     const [customerInStockOnly, setCustomerInStockOnly] = useState(false);
     const [customerSort, setCustomerSort] = useState('newest');
+    const [customerSize, setCustomerSize] = useState('');
+    const [customerColor, setCustomerColor] = useState('');
     const [favoriteProductIds, setFavoriteProductIds] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [checkoutName, setCheckoutName] = useState('');
     const [checkoutPhone, setCheckoutPhone] = useState('');
@@ -62,6 +67,7 @@ export function useAppState() {
     const [couponCodeInput, setCouponCodeInput] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponFeedback, setCouponFeedback] = useState('');
+    const [paymentProofFile, setPaymentProofFile] = useState(null);
 
     // --- Seller States ---
     const [sellerCategory, setSellerCategory] = useState('ทั้งหมด');
@@ -87,6 +93,7 @@ export function useAppState() {
         img: '',
         stock: '',
         description: '',
+        color: '',
         sizes: 'S, M, L, XL',
         variantStocks: 'S: 0, M: 0, L: 0, XL: 0'
     });
@@ -108,6 +115,8 @@ export function useAppState() {
     const defaultDropdownCategories = ['เสื้อผ้า', 'รองเท้า', 'หมวก', 'แว่นตา', 'การ์ตูน'];
     const dropdownOptions = Array.from(new Set([...defaultDropdownCategories, ...uniqueCategories]));
     const allCategoryTabs = ['ทั้งหมด', 'รายการโปรด', ...uniqueCategories];
+    const availableSizes = Array.from(new Set(products.flatMap((product) => product.sizes || []))).filter(Boolean);
+    const availableColors = Array.from(new Set(products.map((product) => product.color).filter(Boolean)));
 
     const filteredProductsForCustomer = products.filter(p => {
         const matchesCategory = customerCategory === 'ทั้งหมด' || (customerCategory === 'รายการโปรด' ? favoriteProductIds.includes(p.id) : p.category === customerCategory);
@@ -115,7 +124,9 @@ export function useAppState() {
         const matchesMin = !customerPriceRange.min || p.price >= Number(customerPriceRange.min);
         const matchesMax = !customerPriceRange.max || p.price <= Number(customerPriceRange.max);
         const matchesStock = !customerInStockOnly || p.stock > 0;
-        return matchesCategory && matchesSearch && matchesMin && matchesMax && matchesStock;
+        const matchesSize = !customerSize || (p.sizes || []).includes(customerSize);
+        const matchesColor = !customerColor || p.color === customerColor;
+        return matchesCategory && matchesSearch && matchesMin && matchesMax && matchesStock && matchesSize && matchesColor;
     }).sort((a, b) => customerSort === 'price-low' ? a.price - b.price : customerSort === 'price-high' ? b.price - a.price : b.id - a.id);
 
     const filteredProductsForSeller = products.filter(p => {
@@ -181,11 +192,16 @@ export function useAppState() {
         }
         return order.username === 'guest' || order.buyer === userProfile.displayName;
     });
+    const favoriteProducts = products.filter((product) => favoriteProductIds.includes(product.id));
+    const unreadNotificationCount = notifications.filter((item) => !item.is_read).length;
+    const getProductReviews = (productId) => reviews.filter((review) => review.product_id === productId);
+    const canReviewProduct = (productId) => Boolean(currentUser?.id && customerOrders.some((order) => order.status !== 'cancelled' && order.items.some((item) => item.id === productId)));
 
     // --- Supabase data loading ---
     const toProduct = (product) => ({
         ...product,
         img: product.image_url,
+        color: product.color || '',
         description: product.description || '',
         variants: product.product_variants || [],
         sizes: (product.product_variants || []).length ? product.product_variants.map((variant) => variant.size) : (Array.isArray(product.sizes) && product.sizes.length ? product.sizes : ['One size'])
@@ -199,10 +215,11 @@ export function useAppState() {
     });
     const refreshStore = async () => {
         if (!supabase) return;
-        const [{ data: productData, error: productError }, { data: orderData, error: orderError }, { data: couponData }] = await Promise.all([
+        const [{ data: productData, error: productError }, { data: orderData, error: orderError }, { data: couponData }, { data: reviewData }] = await Promise.all([
             supabase.from('products').select('*, product_variants(*)').order('id'),
             supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }),
-            supabase.from('coupons').select('*').order('created_at', { ascending: false })
+            supabase.from('coupons').select('*').order('created_at', { ascending: false }),
+            supabase.from('product_reviews').select('*').order('created_at', { ascending: false })
         ]);
         if (productError || orderError) {
             showAlert('โหลดข้อมูลไม่สำเร็จ', productError?.message || orderError?.message || 'กรุณาลองใหม่อีกครั้ง');
@@ -210,13 +227,14 @@ export function useAppState() {
         }
         setProducts((productData || []).map(toProduct));
         setCoupons(couponData || []);
+        setReviews(reviewData || []);
         setOrders((orderData || []).map((order) => ({
             orderId: order.order_number,
             date: new Date(order.created_at).toLocaleDateString('th-TH'),
             time: new Date(order.created_at).toLocaleTimeString('th-TH'),
             buyer: order.buyer, username: order.user_id, contact: order.contact, address: order.address,
             payment: order.payment, subtotal: order.subtotal, discountAmount: order.discount_amount,
-            shippingFee: order.shipping_fee, coupon: order.coupon, couponLabel: order.coupon_label, total: order.total, status: order.status, trackingNumber: order.tracking_number, createdAt: order.created_at,
+            shippingFee: order.shipping_fee, coupon: order.coupon, couponLabel: order.coupon_label, total: order.total, status: order.status, trackingNumber: order.tracking_number, paymentProofPath: order.payment_proof_path, paymentNote: order.payment_note, createdAt: order.created_at,
             items: (order.order_items || []).map((item) => ({ id: item.product_id, variantId: item.variant_id, name: item.name, price: item.price, qty: item.quantity, size: item.size, img: item.image_url }))
         })));
     };
@@ -232,8 +250,12 @@ export function useAppState() {
         setCheckoutPhone(nextProfile.phone);
         setCheckoutAddress(nextProfile.address);
         setCheckoutPayment(nextProfile.defaultPayment);
-        const { data: favorites } = await supabase.from('favorites').select('product_id').eq('user_id', user.id);
+        const [{ data: favorites }, { data: userNotifications }] = await Promise.all([
+            supabase.from('favorites').select('product_id').eq('user_id', user.id),
+            supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(12)
+        ]);
         setFavoriteProductIds((favorites || []).map((favorite) => favorite.product_id));
+        setNotifications(userNotifications || []);
         if (profile.role === 'admin') {
             const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
             setAdminAccounts((profiles || []).filter((account) => account.role === 'admin').map((account) => ({ username: account.username })));
@@ -349,6 +371,67 @@ export function useAppState() {
         const { error } = await request;
         if (error) { showAlert('บันทึกรายการโปรดไม่สำเร็จ', error.message); return; }
         setFavoriteProductIds((ids) => isFavorite ? ids.filter((id) => id !== productId) : [...ids, productId]);
+    };
+
+    const submitProductReview = async (productId, rating, comment) => {
+        if (!supabase || !currentUser?.id) { showAlert('กรุณาเข้าสู่ระบบ', 'เข้าสู่ระบบก่อนเขียนรีวิวสินค้า'); return false; }
+        const { error } = await supabase.rpc('submit_product_review', { payload: { productId, rating, comment } });
+        if (error) { showAlert('ส่งรีวิวไม่สำเร็จ', error.message); return false; }
+        await refreshStore();
+        showAlert('ขอบคุณสำหรับรีวิว', 'บันทึกความคิดเห็นของคุณเรียบร้อยแล้ว');
+        return true;
+    };
+
+    const markNotificationsRead = async () => {
+        if (!supabase || !currentUser?.id) return;
+        const unreadIds = notifications.filter((item) => !item.is_read).map((item) => item.id);
+        if (unreadIds.length) await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
+        setNotifications((items) => items.map((item) => ({ ...item, is_read: true })));
+    };
+
+    const uploadPaymentProof = async (orderNumber, file, note = '') => {
+        if (!supabase || !currentUser?.id) { showAlert('กรุณาเข้าสู่ระบบ', 'ต้องเข้าสู่ระบบก่อนแนบหลักฐานการชำระเงิน'); return false; }
+        if (!file || !file.type.startsWith('image/')) { showAlert('ไฟล์ไม่ถูกต้อง', 'กรุณาเลือกไฟล์รูปภาพของหลักฐานการชำระเงิน'); return false; }
+        if (file.size > 8 * 1024 * 1024) { showAlert('ไฟล์มีขนาดใหญ่เกินไป', 'กรุณาเลือกไฟล์ขนาดไม่เกิน 8 MB'); return false; }
+        const extension = file.name.split('.').pop() || 'jpg';
+        const path = `${currentUser.id}/${orderNumber}-${Date.now()}.${extension}`;
+        const { error: uploadError } = await supabase.storage.from('payment-slips').upload(path, file, { upsert: false, contentType: file.type });
+        if (uploadError) { showAlert('อัปโหลดหลักฐานไม่สำเร็จ', uploadError.message); return false; }
+        const { error: proofError } = await supabase.rpc('submit_payment_proof', { order_number_input: orderNumber, proof_path: path, proof_note: note });
+        if (proofError) { showAlert('บันทึกหลักฐานไม่สำเร็จ', proofError.message); return false; }
+        await refreshStore();
+        setPaymentProofFile(null);
+        showAlert('ส่งหลักฐานแล้ว', 'ร้านได้รับหลักฐานการชำระเงินแล้ว และจะตรวจสอบให้เร็วที่สุด');
+        return true;
+    };
+
+    const openPaymentProof = async (path) => {
+        if (!supabase || !path) return;
+        const { data, error } = await supabase.storage.from('payment-slips').createSignedUrl(path, 60);
+        if (error || !data?.signedUrl) { showAlert('เปิดหลักฐานไม่สำเร็จ', error?.message || 'ไม่พบไฟล์'); return; }
+        window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    const reorderItems = (items) => {
+        if (!items?.length) return;
+        let nextCart = [...cart];
+        items.forEach((item) => {
+            const product = products.find((entry) => entry.id === item.id);
+            const variant = product?.variants?.find((entry) => entry.id === item.variantId || entry.size === item.size);
+            const stock = variant?.stock ?? product?.stock ?? 0;
+            const cartKey = `${item.id}:${variant?.id || item.variantId || item.size || 'One size'}`;
+            const existing = nextCart.find((entry) => (entry.cartKey || `${entry.id}:${entry.variantId || entry.size || 'One size'}`) === cartKey);
+            const currentQty = existing?.qty || 0;
+            if (product && stock > currentQty) {
+                const quantity = Math.min(item.qty, stock - currentQty);
+                nextCart = existing
+                    ? nextCart.map((entry) => entry === existing ? { ...entry, qty: entry.qty + quantity } : entry)
+                    : [...nextCart, { ...product, size: item.size || variant?.size || 'One size', variantId: variant?.id || item.variantId || null, cartKey, qty: quantity }];
+            }
+        });
+        setCart(nextCart);
+        setIsCartOpen(true);
+        showAlert('เพิ่มสินค้าซ้ำแล้ว', 'เราเพิ่มสินค้าที่มีสต็อกลงตะกร้าของคุณให้แล้ว');
     };
 
     const updateOrderStatus = async (orderId, status, trackingNumber) => {
@@ -515,6 +598,10 @@ export function useAppState() {
             showAlert('ข้อมูลส่งของไม่ครบ', 'กรุณากรอกชื่อ เบอร์โทร และที่อยู่จัดส่งให้ครบถ้วนก่อนการชำระเงินนะครับ');
             return;
         }
+        if (!paymentProofFile) {
+            showAlert('ยังไม่ได้แนบหลักฐาน', 'กรุณาแนบรูปหลักฐานการโอนเงินหรือรายการชำระผ่าน TrueMoney ก่อนยืนยันออเดอร์');
+            return;
+        }
 
         let canCheckout = true;
         let outOfStockItemName = '';
@@ -562,10 +649,16 @@ export function useAppState() {
         }
         const { error } = await supabase.rpc('create_order', { payload: newOrder });
         if (error) { showAlert('ชำระเงินไม่สำเร็จ', error.message); return; }
+        const proofUploaded = await uploadPaymentProof(newOrder.orderId, paymentProofFile);
+        if (!proofUploaded) {
+            await refreshStore();
+            showAlert('สร้างออเดอร์แล้ว', `ออเดอร์ ${newOrder.orderId} ถูกสร้างแล้ว แต่ยังไม่พบหลักฐานการชำระเงิน กรุณาแนบจากหน้า “บัญชีของฉัน”`);
+            return;
+        }
         await refreshStore();
         showAlert(
-            'การชำระเงินจำลองเสร็จสมบูรณ์!',
-            `ยอดชำระ ฿${finalTotal.toLocaleString()} บันทึกออเดอร์ในนามคุณ "${checkoutName.trim()}" เรียบร้อย!`
+            'รับคำสั่งซื้อและหลักฐานแล้ว!',
+            `ยอดชำระ ฿${finalTotal.toLocaleString()} ของออเดอร์ ${newOrder.orderId} อยู่ระหว่างตรวจสอบ`
         );
         setCart([]);
         setIsCartOpen(false);
@@ -657,6 +750,7 @@ export function useAppState() {
             image_url: finalImage,
             stock: variants.reduce((sum, variant) => sum + variant.stock, 0),
             description: newProduct.description.trim(),
+            color: newProduct.color.trim(),
             sizes: variants.map((variant) => variant.size)
         };
         const { data: insertedProduct, error } = await supabase.from('products').insert(createdProduct).select('id').single();
@@ -664,7 +758,7 @@ export function useAppState() {
         const { error: variantError } = await supabase.from('product_variants').insert(variants.map((variant) => ({ ...variant, product_id: insertedProduct.id })));
         if (variantError) { showAlert('เพิ่มไซซ์ไม่สำเร็จ', variantError.message); return; }
         await refreshStore();
-        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '', description: '', sizes: 'S, M, L, XL', variantStocks: 'S: 0, M: 0, L: 0, XL: 0' });
+        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '', description: '', color: '', sizes: 'S, M, L, XL', variantStocks: 'S: 0, M: 0, L: 0, XL: 0' });
         setCustomCategoryInput('');
         setNewProductImagePreview('');
         showAlert('สำเร็จ!', `เพิ่มสินค้าใหม่ในหมวดหมู่ "${finalCategory}" แล้ว`);
@@ -711,6 +805,7 @@ export function useAppState() {
             category: finalCategory,
             image_url: finalImage,
             description: (editingProduct.description || '').trim(),
+            color: (editingProduct.color || '').trim(),
             sizes: variants.map((variant) => variant.size)
         }).eq('id', editingProduct.id);
         if (error) { showAlert('อัปเดตสินค้าไม่สำเร็จ', error.message); return; }
@@ -797,7 +892,13 @@ export function useAppState() {
         customerPriceRange, setCustomerPriceRange,
         customerInStockOnly, setCustomerInStockOnly,
         customerSort, setCustomerSort,
+        customerSize, setCustomerSize,
+        customerColor, setCustomerColor,
+        availableSizes, availableColors,
         favoriteProductIds,
+        favoriteProducts,
+        reviews, getProductReviews, canReviewProduct,
+        notifications, unreadNotificationCount, isNotificationOpen, setIsNotificationOpen, markNotificationsRead,
         isCartOpen, setIsCartOpen,
         checkoutName, setCheckoutName,
         checkoutPhone, setCheckoutPhone,
@@ -805,6 +906,7 @@ export function useAppState() {
         checkoutPayment, setCheckoutPayment,
         couponCodeInput, setCouponCodeInput,
         appliedCoupon, couponFeedback,
+        paymentProofFile, setPaymentProofFile,
         cartSubtotal, discountAmount, shippingFee, grandTotal,
         sellerCategory, setSellerCategory,
         adminAccounts,
@@ -847,6 +949,10 @@ export function useAppState() {
         applyCoupon,
         removeCoupon,
         toggleFavorite,
+        submitProductReview,
+        uploadPaymentProof,
+        openPaymentProof,
+        reorderItems,
         customerOrders,
         handleSellerAccess,
         handleAuthSubmit,

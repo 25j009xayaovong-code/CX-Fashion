@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 
-function ProductDetail({ product, onBack, addToCart, isFavorite, toggleFavorite }) {
+function ProductDetail({ product, onBack, addToCart, isFavorite, toggleFavorite, reviews, canReview, submitReview }) {
     const sizes = product.sizes?.length ? product.sizes : ['One size'];
     const [selectedSize, setSelectedSize] = useState(sizes[0]);
     const [quantity, setQuantity] = useState(1);
+    const [rating, setRating] = useState(5);
+    const [reviewText, setReviewText] = useState('');
     const selectedVariant = product.variants?.find((variant) => variant.size === selectedSize);
     const availableStock = selectedVariant?.stock ?? product.stock;
     const isOutOfStock = availableStock <= 0;
@@ -12,7 +14,7 @@ function ProductDetail({ product, onBack, addToCart, isFavorite, toggleFavorite 
         <main className="mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-12">
             <button onClick={onBack} className="mb-6 inline-flex items-center gap-2 text-xs font-bold text-stone-600 transition hover:text-amber-700">← กลับไปเลือกสินค้า</button>
             <div className="grid gap-7 lg:grid-cols-2 lg:gap-12">
-                <div className="overflow-hidden rounded-3xl bg-stone-200"><img src={product.img} alt={product.name} className="aspect-square h-full w-full object-cover lg:aspect-[4/5]" /></div>
+                <div className="overflow-hidden rounded-3xl bg-white"><img src={product.img} alt={product.name} className="aspect-square h-full w-full object-contain p-3 lg:aspect-[4/5]" /></div>
                 <div className="flex flex-col justify-center py-1 sm:py-6">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700">{product.category}</p>
                     <div className="mt-3 flex items-start justify-between gap-4"><h2 className="text-3xl font-black leading-tight tracking-tight text-stone-950 sm:text-5xl">{product.name}</h2><button onClick={() => toggleFavorite(product.id)} className={`rounded-full border p-3 text-lg transition ${isFavorite ? 'border-red-200 bg-red-50 text-red-600' : 'border-stone-200 text-stone-500 hover:border-red-200 hover:text-red-600'}`} aria-label="บันทึกรายการโปรด">{isFavorite ? '♥' : '♡'}</button></div>
@@ -24,6 +26,11 @@ function ProductDetail({ product, onBack, addToCart, isFavorite, toggleFavorite 
                     </div>
                     <div className="mt-6 flex items-center gap-3"><span className="text-xs font-bold text-stone-600">จำนวน</span><div className="flex items-center overflow-hidden rounded-xl border border-stone-200"><button onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="px-3 py-2 text-lg text-stone-600">−</button><span className="min-w-9 text-center text-sm font-bold">{quantity}</span><button onClick={() => setQuantity((value) => Math.min(availableStock, value + 1))} className="px-3 py-2 text-lg text-stone-600">+</button></div><span className={`text-xs ${availableStock <= 3 ? 'text-amber-700' : 'text-stone-500'}`}>เหลือไซซ์นี้ {availableStock} ชิ้น</span></div>
                     <button onClick={() => addToCart(product, quantity, selectedSize, selectedVariant?.id)} disabled={isOutOfStock} className="mt-7 w-full rounded-xl bg-stone-950 px-5 py-4 text-sm font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-stone-300">{isOutOfStock ? 'ไซซ์นี้หมด' : `เพิ่มไซซ์ ${selectedSize} ลงตะกร้า`}</button>
+                    <section className="mt-10 border-t border-stone-200 pt-7">
+                        <div className="flex items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Verified buyers</p><h3 className="mt-1 text-lg font-black text-stone-950">รีวิวจากลูกค้า</h3></div><span className="text-xs font-bold text-stone-500">{reviews.length} รีวิว</span></div>
+                        {canReview && <div className="mt-4 rounded-2xl bg-stone-100 p-4"><div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-stone-800">ให้คะแนนสินค้าที่คุณเคยซื้อ</p><div className="flex gap-1">{[1, 2, 3, 4, 5].map((star) => <button key={star} onClick={() => setRating(star)} className={`text-lg ${star <= rating ? 'text-amber-500' : 'text-stone-300'}`} aria-label={`${star} ดาว`}>★</button>)}</div></div><textarea value={reviewText} onChange={(event) => setReviewText(event.target.value)} maxLength="800" rows="2" placeholder="แบ่งปันประสบการณ์ของคุณ (ไม่บังคับ)" className="mt-3 w-full resize-none rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs outline-none focus:border-stone-950" /><button onClick={async () => { if (await submitReview(product.id, rating, reviewText)) setReviewText(''); }} className="mt-3 rounded-xl bg-stone-950 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700">ส่งรีวิว</button></div>}
+                        <div className="mt-4 space-y-3">{reviews.length === 0 ? <p className="rounded-xl border border-dashed border-stone-200 py-5 text-center text-xs text-stone-500">ยังไม่มีรีวิวสำหรับสินค้านี้</p> : reviews.slice(0, 4).map((review) => <article key={review.id} className="rounded-xl border border-stone-200 bg-white p-4"><div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-stone-900">{review.reviewer_name}</p><span className="text-xs tracking-wide text-amber-500">{'★'.repeat(review.rating)}<span className="text-stone-200">{'★'.repeat(5 - review.rating)}</span></span></div>{review.comment && <p className="mt-2 text-xs leading-5 text-stone-600">{review.comment}</p>}</article>)}</div>
+                    </section>
                 </div>
             </div>
         </main>
@@ -34,19 +41,21 @@ function CustomerView({ state }) {
     const {
         customerCategory, setCustomerCategory, filteredProductsForCustomer, selectedProduct, setSelectedProduct,
         customerPriceRange, setCustomerPriceRange, customerInStockOnly, setCustomerInStockOnly, customerSort, setCustomerSort,
+        customerSize, setCustomerSize, customerColor, setCustomerColor, availableSizes, availableColors,
         favoriteProductIds, toggleFavorite,
+        getProductReviews, canReviewProduct, submitProductReview,
         allCategoryTabs, addToCart, userProfile, isCartOpen, setIsCartOpen,
         cart, removeFromCart, clearCart, handleCheckout, checkoutName, setCheckoutName,
         checkoutPhone, setCheckoutPhone, checkoutAddress, setCheckoutAddress,
         checkoutPayment, setCheckoutPayment, couponCodeInput, setCouponCodeInput,
         appliedCoupon, couponFeedback, cartSubtotal, discountAmount, shippingFee, grandTotal,
-        applyCoupon, removeCoupon
+        applyCoupon, removeCoupon, paymentProofFile, setPaymentProofFile
     } = state;
     const [selectedQuantities, setSelectedQuantities] = useState({});
 
     if (selectedProduct) {
         const currentProduct = filteredProductsForCustomer.find((product) => product.id === selectedProduct.id) || selectedProduct;
-        return <div className="flex-grow bg-stone-50"><ProductDetail product={currentProduct} onBack={() => setSelectedProduct(null)} addToCart={addToCart} isFavorite={favoriteProductIds.includes(currentProduct.id)} toggleFavorite={toggleFavorite} /></div>;
+        return <div className="flex-grow bg-stone-50"><ProductDetail product={currentProduct} onBack={() => setSelectedProduct(null)} addToCart={addToCart} isFavorite={favoriteProductIds.includes(currentProduct.id)} toggleFavorite={toggleFavorite} reviews={getProductReviews(currentProduct.id)} canReview={canReviewProduct(currentProduct.id)} submitReview={submitProductReview} /></div>;
     }
 
     return (
@@ -81,11 +90,14 @@ function CustomerView({ state }) {
                         </button>
                     ))}
                 </div>
-                <div className="mb-8 grid grid-cols-2 gap-2 rounded-2xl border border-stone-200 bg-white p-3 sm:flex sm:items-center sm:gap-3">
+                <div className="mb-8 grid grid-cols-2 gap-2 rounded-2xl border border-stone-200 bg-white p-3 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
                     <input type="number" min="0" value={customerPriceRange.min} onChange={(e) => setCustomerPriceRange((range) => ({ ...range, min: e.target.value }))} placeholder="ราคาต่ำสุด" className="min-w-0 rounded-lg border border-stone-200 px-3 py-2 text-xs focus:border-stone-950 focus:outline-none" />
                     <input type="number" min="0" value={customerPriceRange.max} onChange={(e) => setCustomerPriceRange((range) => ({ ...range, max: e.target.value }))} placeholder="ราคาสูงสุด" className="min-w-0 rounded-lg border border-stone-200 px-3 py-2 text-xs focus:border-stone-950 focus:outline-none" />
                     <label className="col-span-2 flex items-center gap-2 text-xs font-semibold text-stone-600 sm:col-auto"><input type="checkbox" checked={customerInStockOnly} onChange={(e) => setCustomerInStockOnly(e.target.checked)} className="accent-stone-950" /> พร้อมส่งเท่านั้น</label>
+                    <select value={customerSize} onChange={(e) => setCustomerSize(e.target.value)} className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 focus:border-stone-950 focus:outline-none"><option value="">ทุกไซซ์</option>{availableSizes.map((size) => <option key={size} value={size}>ไซซ์ {size}</option>)}</select>
+                    <select value={customerColor} onChange={(e) => setCustomerColor(e.target.value)} className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 focus:border-stone-950 focus:outline-none"><option value="">ทุกสี</option>{availableColors.map((color) => <option key={color} value={color}>{color}</option>)}</select>
                     <select value={customerSort} onChange={(e) => setCustomerSort(e.target.value)} className="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 focus:border-stone-950 focus:outline-none sm:col-auto"><option value="newest">ใหม่ล่าสุด</option><option value="price-low">ราคา: น้อยไปมาก</option><option value="price-high">ราคา: มากไปน้อย</option></select>
+                    <button onClick={() => { setCustomerPriceRange({ min: '', max: '' }); setCustomerInStockOnly(false); setCustomerSize(''); setCustomerColor(''); setCustomerSort('newest'); }} className="col-span-2 text-xs font-bold text-stone-500 underline underline-offset-2 sm:col-auto">ล้างตัวกรอง</button>
                 </div>
 
                 {filteredProductsForCustomer.length === 0 ? (
@@ -103,7 +115,7 @@ function CustomerView({ state }) {
                             return (
                                 <article key={product.id} className="product-card group relative flex flex-col">
                                     <button onClick={() => setSelectedProduct(product)} className="relative aspect-square w-full overflow-hidden rounded-2xl bg-stone-200 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-950 focus-visible:ring-offset-2 sm:aspect-[4/5]" aria-label={`ดูรายละเอียด ${product.name}`}>
-                                        <img src={product.img} alt={product.name} className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${isOutOfStock ? 'grayscale opacity-40' : ''}`} />
+                                        <img src={product.img} alt={product.name} className={`h-full w-full object-contain p-2 transition duration-700 group-hover:scale-105 ${isOutOfStock ? 'grayscale opacity-40' : ''}`} />
                                         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-stone-900 backdrop-blur">{product.category}</span>
                                         {isOutOfStock && <span className="absolute inset-0 m-auto flex h-10 w-28 items-center justify-center rounded-full bg-stone-950 text-[10px] font-bold text-white">สินค้าหมด</span>}
                                         <span className="absolute bottom-3 right-3 rounded-full bg-stone-950/85 px-2.5 py-1 text-[9px] font-bold text-white opacity-0 backdrop-blur transition group-hover:opacity-100">ดูรายละเอียด</span>
@@ -140,7 +152,7 @@ function CustomerView({ state }) {
                             {cart.length === 0 ? <div className="py-20 text-center"><p className="text-3xl">🛍️</p><p className="mt-3 text-sm font-semibold text-stone-600">ตะกร้าของคุณยังว่าง</p><button onClick={() => setIsCartOpen(false)} className="mt-4 text-xs font-bold text-amber-700 underline underline-offset-4">เลือกซื้อสินค้า</button></div> : <>
                                 <div className="space-y-4 border-b border-stone-200 pb-5">{cart.map((item) => <div key={item.cartKey || item.id} className="flex gap-3"><img src={item.img} alt={item.name} className="h-16 w-14 rounded-xl object-cover" /><div className="min-w-0 flex-1"><h5 className="text-xs font-bold leading-5 text-stone-900 line-clamp-1">{item.name}</h5><p className="mt-1 text-[10px] font-semibold text-amber-700">ไซซ์: {item.size || 'One size'}</p><p className="mt-1 text-xs font-black text-stone-950">฿{item.price.toLocaleString()}</p></div><div className="flex h-8 items-center overflow-hidden rounded-lg border border-stone-200"><button onClick={() => removeFromCart(item)} className="px-2 text-sm text-stone-600">−</button><span className="px-1 text-xs font-bold">{item.qty}</span><button onClick={() => addToCart(item, 1, item.size, item.variantId)} className="px-2 text-sm text-stone-600">+</button></div></div>)}</div>
                                 <div className="space-y-4 py-5"><div className="rounded-2xl bg-stone-100 p-3.5"><div className="mb-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-stone-600"><span>โค้ดส่วนลด</span>{appliedCoupon && <button onClick={removeCoupon} className="text-red-600">ลบ</button>}</div>{appliedCoupon ? <p className="text-xs font-bold text-emerald-700">{appliedCoupon.label} ถูกเลือกแล้ว</p> : <div className="flex gap-2"><input type="text" value={couponCodeInput} onChange={(e) => setCouponCodeInput(e.target.value)} placeholder="SAVE10" className="min-w-0 flex-1 rounded-lg border-0 bg-white px-3 py-2 text-xs focus:ring-1 focus:ring-stone-950" /><button onClick={applyCoupon} className="rounded-lg bg-stone-950 px-3 text-[10px] font-bold text-white">ใช้</button></div>}{couponFeedback && <p className="mt-2 text-[10px] text-stone-500">{couponFeedback}</p>}</div>
-                                    <div><p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Delivery details</p><div className="space-y-3"><input type="text" required value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} placeholder="ชื่อผู้รับสินค้า *" className="checkout-input" /><div className="grid grid-cols-2 gap-3"><input type="text" required value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} placeholder="เบอร์โทร *" className="checkout-input" /><select value={checkoutPayment} onChange={(e) => setCheckoutPayment(e.target.value)} className="checkout-input"><option value="bank">โอนเงิน</option><option value="card">บัตรเครดิต</option><option value="wallet">TrueMoney</option></select></div><textarea required rows="2" value={checkoutAddress} onChange={(e) => setCheckoutAddress(e.target.value)} placeholder="ที่อยู่จัดส่ง *" className="checkout-input resize-none" /></div></div>
+                                    <div><p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">Delivery & payment</p><div className="space-y-3"><input type="text" required value={checkoutName} onChange={(e) => setCheckoutName(e.target.value)} placeholder="ชื่อผู้รับสินค้า *" className="checkout-input" /><div className="grid grid-cols-2 gap-3"><input type="text" required value={checkoutPhone} onChange={(e) => setCheckoutPhone(e.target.value)} placeholder="เบอร์โทร *" className="checkout-input" /><select value={checkoutPayment} onChange={(e) => setCheckoutPayment(e.target.value)} className="checkout-input"><option value="bank">โอนเงินธนาคาร</option><option value="wallet">TrueMoney</option></select></div><textarea required rows="2" value={checkoutAddress} onChange={(e) => setCheckoutAddress(e.target.value)} placeholder="ที่อยู่จัดส่ง *" className="checkout-input resize-none" /><label className="block rounded-xl border border-dashed border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-stone-700">แนบหลักฐานการชำระเงิน *<input type="file" accept="image/*" onChange={(event) => setPaymentProofFile(event.target.files?.[0] || null)} className="mt-2 block w-full text-[10px] text-stone-500" />{paymentProofFile && <span className="mt-1 block text-[10px] text-emerald-700">เลือกแล้ว: {paymentProofFile.name}</span>}<span className="mt-1 block text-[10px] font-normal text-stone-500">รองรับรูปภาพไม่เกิน 8 MB</span></label></div></div>
                                 </div>
                             </>}
                         </div>
