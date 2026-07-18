@@ -9,7 +9,7 @@ function SettingsView({ state }) {
 
     return (
         <div className="flex-grow">
-            <div className="container mx-auto px-6 py-10 max-w-4xl">
+            <div className="container mx-auto max-w-4xl px-4 py-7 sm:px-6 sm:py-10">
                 <div className="mb-8 border-b border-gray-200 pb-4">
                     <h2 className="text-2xl font-black text-gray-950">👤 การตั้งค่าโปรไฟล์และบัญชี</h2>
                     <p className="text-xs text-gray-500 mt-1">จัดการที่อยู่จัดส่งสินค้า วิธีการชำระเงินที่ต้องการ และอัปเดตข้อมูลความปลอดภัยของบัญชีผู้ใช้นี้</p>
@@ -54,7 +54,8 @@ function SettingsView({ state }) {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">อีเมลผู้ใช้งาน</label>
-                                    <input type="email" value={settingsForm.email} onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })} className="w-full px-4 py-2 text-xs rounded-lg border border-gray-200 focus:outline-none focus:border-amber-500" />
+                                    <input type="email" value={settingsForm.email} readOnly className="w-full cursor-not-allowed bg-gray-50 px-4 py-2 text-xs rounded-lg border border-gray-200 text-gray-500" />
+                                    <p className="mt-1 text-[10px] text-gray-400">อีเมลเชื่อมกับบัญชี Supabase และแก้ไขจากหน้าโปรไฟล์นี้ไม่ได้</p>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ที่อยู่จัดส่งสินค้าโดยเริ่มต้น *</label>
@@ -90,6 +91,8 @@ function SettingsView({ state }) {
                                                 <span className="text-[11px] font-black text-blue-600">฿{order.total.toLocaleString()}</span>
                                             </div>
                                             <div className="mt-2 flex flex-wrap gap-2">
+                                                <span className="text-[10px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full">{({ pending: 'รอชำระเงิน', paid: 'ชำระแล้ว', packing: 'กำลังแพ็ก', shipped: 'จัดส่งแล้ว', completed: 'สำเร็จ', cancelled: 'ยกเลิก' })[order.status] || 'รอชำระเงิน'}</span>
+                                                {order.trackingNumber && <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">พัสดุ: {order.trackingNumber}</span>}
                                                 {order.couponLabel && (
                                                     <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">{order.couponLabel}</span>
                                                 )}
@@ -102,7 +105,7 @@ function SettingsView({ state }) {
                         </div>
 
                         <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-xs">
-                            <h4 className="text-sm font-black text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">🔒 ความปลอดภัย (จำลองเปลี่ยนรหัสผ่าน)</h4>
+                            <h4 className="text-sm font-black text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">🔒 ความปลอดภัย</h4>
                             {currentUser ? (
                                 <form onSubmit={handleChangePassword} className="space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
