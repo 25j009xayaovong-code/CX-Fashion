@@ -7,19 +7,13 @@ function SellerView({ state }) {
         allCategoryTabs, adjustStock, startEditingProduct, handleDeleteProduct,
         newProduct, setNewProduct, customCategoryInput, setCustomCategoryInput,
         sellerStats,
-<<<<<<< HEAD
         sellerSalesByDay,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         newProductImagePreview, setNewProductImagePreview, dropdownOptions,
         handleAddProduct, isOrderViewOpen, setIsOrderViewOpen,
         isAddProductViewOpen, setIsAddProductViewOpen,
         isInventoryViewOpen, setIsInventoryViewOpen,
         isAdminManagementViewOpen, setIsAdminManagementViewOpen,
-<<<<<<< HEAD
         isCouponManagementViewOpen, setIsCouponManagementViewOpen,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         adminAccounts, newAdminUsername, setNewAdminUsername,
         newAdminPassword, setNewAdminPassword, handleCreateAdmin, handleDeleteAdmin,
         customerAccounts, isCustomerAccountViewOpen, setIsCustomerAccountViewOpen,
@@ -29,10 +23,7 @@ function SellerView({ state }) {
         orderDateTo, setOrderDateTo,
         clearAllFilters,
         handleClearOrders, handleDeleteSingleOrder,
-<<<<<<< HEAD
         updateOrderStatus, coupons, newCoupon, setNewCoupon, handleCreateCoupon, toggleCoupon,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         editingProduct, setEditingProduct, editCategoryInput, setEditCategoryInput,
         editProductImagePreview, setEditProductImagePreview, handleSaveEditProduct
     } = state;
@@ -56,29 +47,18 @@ function SellerView({ state }) {
     };
 
     const hasActiveFilters = orderDateFilter || orderDateFrom || orderDateTo;
-<<<<<<< HEAD
     const isFocusedSellerView = isAddProductViewOpen || isInventoryViewOpen || isCustomerAccountViewOpen || isAdminManagementViewOpen || isCouponManagementViewOpen || isOrderViewOpen;
-=======
-    const isFocusedSellerView = isAddProductViewOpen || isInventoryViewOpen || isCustomerAccountViewOpen || isAdminManagementViewOpen || isOrderViewOpen;
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     const returnToDashboard = () => {
         setIsAddProductViewOpen(false);
         setIsInventoryViewOpen(false);
         setIsCustomerAccountViewOpen(false);
         setIsAdminManagementViewOpen(false);
-<<<<<<< HEAD
         setIsCouponManagementViewOpen(false);
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         setIsOrderViewOpen(false);
     };
 
     return (
-<<<<<<< HEAD
         <div className="container mx-auto flex-grow px-4 py-7 sm:px-6 sm:py-10">
-=======
-        <div className="flex-grow container mx-auto px-6 py-10">
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             <div className="mb-8 border-b border-gray-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-black text-gray-950 flex items-center gap-2">⚙️ Dashboard ผู้จัดการระบบหลังบ้าน</h2>
@@ -109,14 +89,11 @@ function SellerView({ state }) {
                 </div>
             </div>
 
-<<<<<<< HEAD
             <section className="mb-8 rounded-2xl border border-gray-150 bg-white p-5 shadow-sm">
                 <div className="mb-5 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sales overview</p><h3 className="mt-1 text-sm font-black text-gray-900">ยอดขาย 7 วันล่าสุด</h3></div><span className="text-xs font-bold text-emerald-600">฿{sellerStats.totalSales.toLocaleString()}</span></div>
                 <div className="flex h-28 items-end gap-2">{sellerSalesByDay.map((day) => { const peak = Math.max(...sellerSalesByDay.map((item) => item.total), 1); return <div key={day.label} className="flex flex-1 flex-col items-center gap-2"><span className="text-[9px] font-bold text-gray-500">{day.total ? `฿${Math.round(day.total / 1000)}k` : ''}</span><div className="w-full rounded-t-md bg-amber-400 transition-all" style={{ height: `${Math.max(5, (day.total / peak) * 72)}px` }}></div><span className="text-[9px] font-bold text-gray-400">{day.label}</span></div>; })}</div>
             </section>
 
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-8">
                     <button type="button" onClick={() => { returnToDashboard(); setIsAdminManagementViewOpen(true); }} className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm text-left hover:border-purple-300 hover:bg-purple-50/30 transition">
                         <span className="text-2xl">👥</span>
@@ -143,14 +120,11 @@ function SellerView({ state }) {
                         <span className="block mt-3 text-base font-extrabold text-gray-900">รายงานสต็อกสินค้าหน้าร้าน</span>
                         <span className="block mt-1 text-xs text-gray-400">{filteredProductsForSeller.length} รายการ · ตรวจสอบและจัดการสต็อก</span>
                     </button>
-<<<<<<< HEAD
                     <button type="button" onClick={() => { returnToDashboard(); setIsCouponManagementViewOpen(true); }} className="bg-white rounded-2xl border border-gray-150 p-6 shadow-sm text-left hover:border-amber-300 hover:bg-amber-50/30 transition">
                         <span className="text-2xl">🎟️</span>
                         <span className="block mt-3 text-base font-extrabold text-gray-900">จัดการคูปอง</span>
                         <span className="block mt-1 text-xs text-gray-400">{coupons.length} คูปอง · สร้างส่วนลดและกำหนดวันหมดอายุ</span>
                     </button>
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                 </section>
             </>
             )}
@@ -165,13 +139,8 @@ function SellerView({ state }) {
                         <button type="button" onClick={returnToDashboard} className="text-xs font-bold text-gray-600 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50">← กลับ</button>
                     </div>
                     <form onSubmit={handleCreateAdmin} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-<<<<<<< HEAD
                         <input type="email" required value={newAdminUsername} onChange={(e) => setNewAdminUsername(e.target.value)} placeholder="อีเมลผู้ดูแลใหม่" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                         <input type="password" required minLength="6" value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} placeholder="รหัสผ่าน 6 ตัวขึ้นไป" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
-=======
-                        <input type="text" required minLength="3" value={newAdminUsername} onChange={(e) => setNewAdminUsername(e.target.value)} placeholder="ชื่อผู้ดูแลใหม่" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
-                        <input type="password" required minLength="4" value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} placeholder="รหัสผ่าน" className="px-3 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                         <button type="submit" className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs transition">เพิ่มผู้ดูแล</button>
                     </form>
                     {adminAccounts.length > 0 && (
@@ -218,7 +187,6 @@ function SellerView({ state }) {
                 </section>
             )}
 
-<<<<<<< HEAD
             {isCouponManagementViewOpen && (
                 <section className="mx-auto max-w-4xl rounded-2xl border border-gray-150 bg-white p-6 shadow-sm">
                     <div className="mb-5 flex items-center justify-between gap-4 border-b border-gray-100 pb-3"><div><h3 className="text-base font-extrabold text-gray-900">🎟️ จัดการคูปองส่วนลด</h3><p className="mt-1 text-[11px] text-gray-400">สร้าง ปิดใช้งาน และกำหนดเงื่อนไขของคูปอง</p></div><button type="button" onClick={returnToDashboard} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">← กลับ</button></div>
@@ -236,8 +204,6 @@ function SellerView({ state }) {
                 </section>
             )}
 
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             {isOrderViewOpen ? (
                 <div className="mb-10 bg-white rounded-2xl shadow-sm border border-gray-150 overflow-hidden animate-fadeIn">
                     <div className="p-6 border-b border-gray-100 bg-gray-50/50">
@@ -363,10 +329,7 @@ function SellerView({ state }) {
                                         <th className="py-4 px-6">ลูกค้า & สิทธิ์ชำระเงิน</th>
                                         <th className="py-4 px-6">ผู้รับปลายทาง / เบอร์ติดต่อ</th>
                                         <th className="py-4 px-6">สินค้าทั้งหมด</th>
-<<<<<<< HEAD
                                         <th className="py-4 px-6">สถานะ / ติดตาม</th>
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                                         <th className="py-4 px-6 text-right">ยอดรวมสุทธิ</th>
                                         <th className="py-4 px-6 text-center">จัดการ</th>
                                     </tr>
@@ -382,7 +345,6 @@ function SellerView({ state }) {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-<<<<<<< HEAD
                                                 <div className="space-y-2">
                                                     <select defaultValue={order.status || 'pending'} onChange={(e) => updateOrderStatus(order.orderId, e.target.value, order.trackingNumber)} className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-[10px] font-bold text-gray-700 focus:outline-none">
                                                         <option value="pending">รอชำระเงิน</option><option value="paid">ชำระแล้ว</option><option value="packing">กำลังแพ็ก</option><option value="shipped">จัดส่งแล้ว</option><option value="completed">สำเร็จ</option><option value="cancelled">ยกเลิก</option>
@@ -391,8 +353,6 @@ function SellerView({ state }) {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-6">
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                                                 <span className="font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-[11px] block w-fit mb-1.5">{order.buyer}</span>
                                                 <span className="text-[10px] text-gray-550 block font-semibold">💳 {order.payment}</span>
                                             </td>
@@ -436,26 +396,18 @@ function SellerView({ state }) {
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ชื่อสินค้า *</label>
                                 <input type="text" required value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} placeholder="เช่น เสื้อโค้ทกันหนาวสไตล์เกาหลี" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
-<<<<<<< HEAD
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รายละเอียดสินค้า</label>
                                 <textarea rows="3" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="บอกเนื้อผ้า ทรง หรือจุดเด่นของสินค้า..." className="w-full resize-none px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ราคา (บาท) *</label>
                                     <input type="number" required min="0" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} placeholder="เช่น 1200" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 </div>
                                 <div>
-<<<<<<< HEAD
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สต็อกรวม (กรณี One size)</label>
                                     <input type="number" min="0" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} placeholder="เช่น 20" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
-=======
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">สต็อกเริ่มต้น *</label>
-                                    <input type="number" required min="0" value={newProduct.stock} onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })} placeholder="เช่น 20" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                                 </div>
                             </div>
                             <div>
@@ -472,7 +424,6 @@ function SellerView({ state }) {
                                 )}
                             </div>
                             <div>
-<<<<<<< HEAD
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ไซซ์ที่มีจำหน่าย</label>
                                 <input type="text" value={newProduct.sizes} onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })} placeholder="เช่น S, M, L, XL หรือ One size" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 <p className="mt-1 text-[10px] text-gray-400">คั่นแต่ละไซซ์ด้วยเครื่องหมายจุลภาค (,)</p>
@@ -483,8 +434,6 @@ function SellerView({ state }) {
                                 <p className="mt-1 text-[10px] text-gray-400">ระบุไซซ์และจำนวนด้วย : แล้วคั่นแต่ละรายการด้วย ,</p>
                             </div>
                             <div>
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รูปภาพสินค้า</label>
                                 <div className="border-2 border-dashed border-gray-200 rounded-lg p-3 hover:border-purple-400 transition bg-gray-50 flex flex-col items-center justify-center cursor-pointer relative mb-3">
                                     <input type="file" accept="image/*" id="newProductImage" onChange={handleNewProductImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -552,13 +501,7 @@ function SellerView({ state }) {
                                                 <td className="py-4 px-6 font-bold text-gray-900 text-xs">฿{product.price.toLocaleString()}</td>
                                                 <td className="py-4 px-6">
                                                     <div className="flex items-center justify-center space-x-1.5">
-<<<<<<< HEAD
                                                         <div className="space-y-1">{(product.variants?.length ? product.variants : [{ id: null, size: 'รวม', stock: product.stock }]).map((variant) => <div key={variant.id || 'total'} className="flex items-center gap-1"><span className="w-7 text-[9px] font-bold text-gray-400">{variant.size}</span><button onClick={() => adjustStock(product.id, -1, variant.id)} className="h-6 w-6 rounded-md bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200">-</button><span className="w-7 text-center text-xs font-bold text-gray-900">{variant.stock}</span><button onClick={() => adjustStock(product.id, 1, variant.id)} className="h-6 w-6 rounded-md bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200">+</button></div>)}</div>
-=======
-                                                        <button onClick={() => adjustStock(product.id, -1)} className="w-6 h-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center justify-center font-bold text-xs">-</button>
-                                                        <span className="w-8 text-center font-bold text-xs text-gray-900">{product.stock}</span>
-                                                        <button onClick={() => adjustStock(product.id, 1)} className="w-6 h-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md flex items-center justify-center font-bold text-xs">+</button>
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                                                     </div>
                                                 </td>
                                                 <td className="py-4 px-6 text-center">
@@ -594,13 +537,10 @@ function SellerView({ state }) {
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ชื่อสินค้า *</label>
                                 <input type="text" required value={editingProduct.name} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
-<<<<<<< HEAD
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">รายละเอียดสินค้า</label>
                                 <textarea rows="3" value={editingProduct.description || ''} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} placeholder="บอกเนื้อผ้า ทรง หรือจุดเด่นของสินค้า..." className="w-full resize-none px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                             </div>
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ราคา (บาท) *</label>
@@ -625,7 +565,6 @@ function SellerView({ state }) {
                                 )}
                             </div>
                             <div>
-<<<<<<< HEAD
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">ไซซ์ที่มีจำหน่าย</label>
                                 <input type="text" value={editingProduct.sizes || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sizes: e.target.value })} placeholder="เช่น S, M, L, XL หรือ One size" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-xs focus:border-purple-500 focus:outline-none" />
                                 <p className="mt-1 text-[10px] text-gray-400">คั่นแต่ละไซซ์ด้วยเครื่องหมายจุลภาค (,)</p>
@@ -636,8 +575,6 @@ function SellerView({ state }) {
                                 <p className="mt-1 text-[10px] text-gray-400">ระบุไซซ์และจำนวนด้วย : แล้วคั่นแต่ละรายการด้วย ,</p>
                             </div>
                             <div>
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">เปลี่ยนรูปภาพสินค้า</label>
                                 <div className="border-2 border-dashed border-gray-200 rounded-lg p-3 hover:border-purple-400 transition bg-gray-50 flex flex-col items-center justify-center cursor-pointer relative mb-3">
                                     <input type="file" accept="image/*" id="editProductImage" onChange={handleEditProductImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />

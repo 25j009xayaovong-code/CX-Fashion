@@ -1,78 +1,9 @@
 import { useState, useEffect } from 'react';
-<<<<<<< HEAD
 import { DEFAULT_PROFILE } from '../utils/constants';
 import { generateOrderId, convertThaiDateToISO } from '../utils/helpers';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 export function useAppState() {
-=======
-import { DEFAULT_PRODUCTS, DEFAULT_PROFILE } from '../utils/constants';
-import { convertFileToBase64, generateOrderId, convertThaiDateToISO } from '../utils/helpers';
-
-export function useAppState() {
-    const SPECIAL_ADMIN_USERNAME = 'Rin';
-    const SPECIAL_ADMIN_EMAIL = 'rin@example.com';
-    const SPECIAL_ADMIN_PASSWORD = '1234';
-
-    const isSpecialAdminCredential = (value, password) => {
-        const normalized = String(value || '').trim().toLowerCase();
-        return (normalized === SPECIAL_ADMIN_USERNAME.toLowerCase() || normalized === SPECIAL_ADMIN_EMAIL.toLowerCase())
-            && String(password || '') === SPECIAL_ADMIN_PASSWORD;
-    };
-
-    const getSpecialAdminProfile = () => ({
-        ...DEFAULT_PROFILE,
-        displayName: SPECIAL_ADMIN_USERNAME,
-        email: SPECIAL_ADMIN_EMAIL,
-        phone: '081-111-2222',
-        address: '123/4 ถ.สุขุมวิท แขวงคลองตัน กรุงเทพฯ 10110',
-        defaultPayment: 'bank'
-    });
-
-    const getStoredProfile = (username) => {
-        if (!username) return DEFAULT_PROFILE;
-        try {
-            const item = localStorage.getItem(`fashion_profile_${username}`);
-            if (item) {
-                const parsed = JSON.parse(item);
-                return { ...DEFAULT_PROFILE, ...parsed };
-            }
-        } catch (error) {
-            console.error('Failed to load profile:', error);
-        }
-        return DEFAULT_PROFILE;
-    };
-
-    const saveUserProfile = (username, profile) => {
-        if (!username) return;
-        localStorage.setItem(`fashion_profile_${username}`, JSON.stringify(profile));
-    };
-
-    const getStoredCustomerAccounts = () => {
-        try {
-            const storedAdmins = JSON.parse(localStorage.getItem('fashion_admin_accounts') || '[]');
-            const adminUsernames = new Set([
-                SPECIAL_ADMIN_USERNAME.toLowerCase(),
-                ...storedAdmins.map((account) => account.username.toLowerCase())
-            ]);
-
-            return Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
-                .filter((key) => key?.startsWith('user_db_'))
-                .map((key) => key.slice('user_db_'.length))
-                .filter((username) => !adminUsernames.has(username.toLowerCase()))
-                .map((username) => {
-                    const profile = getStoredProfile(username);
-                    return {
-                        username,
-                        displayName: profile.displayName || username,
-                        email: profile.email || ''
-                    };
-                });
-        } catch {
-            return [];
-        }
-    };
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
     // --- Local Storage Helpers ---
     const useLocalStorage = (key, initialValue) => {
@@ -93,7 +24,6 @@ export function useAppState() {
     };
 
     // --- States ---
-<<<<<<< HEAD
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useLocalStorage('fashion_cart', []);
     const [orders, setOrders] = useState([]);
@@ -101,15 +31,6 @@ export function useAppState() {
     const [userProfile, setUserProfile] = useState(DEFAULT_PROFILE);
     const [adminAccounts, setAdminAccounts] = useState([]);
     const [customerAccounts, setCustomerAccounts] = useState([]);
-=======
-    const [products, setProducts] = useLocalStorage('fashion_products', DEFAULT_PRODUCTS);
-    const [cart, setCart] = useLocalStorage('fashion_cart', []);
-    const [orders, setOrders] = useLocalStorage('fashion_orders', []);
-    const [currentUser, setCurrentUser] = useLocalStorage('fashion_user', null);
-    const [userProfile, setUserProfile] = useLocalStorage('fashion_profile', DEFAULT_PROFILE);
-    const [adminAccounts, setAdminAccounts] = useLocalStorage('fashion_admin_accounts', []);
-    const [customerAccounts, setCustomerAccounts] = useLocalStorage('fashion_customer_accounts', getStoredCustomerAccounts());
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
     // --- UI States ---
     const [viewMode, setViewMode] = useState('customer');
@@ -128,14 +49,11 @@ export function useAppState() {
 
     // --- Customer States ---
     const [customerCategory, setCustomerCategory] = useState('ทั้งหมด');
-<<<<<<< HEAD
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [customerPriceRange, setCustomerPriceRange] = useState({ min: '', max: '' });
     const [customerInStockOnly, setCustomerInStockOnly] = useState(false);
     const [customerSort, setCustomerSort] = useState('newest');
     const [favoriteProductIds, setFavoriteProductIds] = useState([]);
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [checkoutName, setCheckoutName] = useState('');
     const [checkoutPhone, setCheckoutPhone] = useState('');
@@ -158,11 +76,8 @@ export function useAppState() {
     const [customerAccountSearch, setCustomerAccountSearch] = useState('');
     const [newAdminUsername, setNewAdminUsername] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
-<<<<<<< HEAD
     const [isCouponManagementViewOpen, setIsCouponManagementViewOpen] = useState(false);
     const [newCoupon, setNewCoupon] = useState({ code: '', label: '', type: 'percent', value: '10', minimumOrder: '', usageLimit: '', expiresAt: '' });
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
     // --- Add Product States ---
     const [newProduct, setNewProduct] = useState({
@@ -170,14 +85,10 @@ export function useAppState() {
         price: '',
         category: 'เสื้อผ้า',
         img: '',
-<<<<<<< HEAD
         stock: '',
         description: '',
         sizes: 'S, M, L, XL',
         variantStocks: 'S: 0, M: 0, L: 0, XL: 0'
-=======
-        stock: ''
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     });
     const [customCategoryInput, setCustomCategoryInput] = useState('');
     const [newProductImagePreview, setNewProductImagePreview] = useState('');
@@ -196,7 +107,6 @@ export function useAppState() {
     const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
     const defaultDropdownCategories = ['เสื้อผ้า', 'รองเท้า', 'หมวก', 'แว่นตา', 'การ์ตูน'];
     const dropdownOptions = Array.from(new Set([...defaultDropdownCategories, ...uniqueCategories]));
-<<<<<<< HEAD
     const allCategoryTabs = ['ทั้งหมด', 'รายการโปรด', ...uniqueCategories];
 
     const filteredProductsForCustomer = products.filter(p => {
@@ -207,15 +117,6 @@ export function useAppState() {
         const matchesStock = !customerInStockOnly || p.stock > 0;
         return matchesCategory && matchesSearch && matchesMin && matchesMax && matchesStock;
     }).sort((a, b) => customerSort === 'price-low' ? a.price - b.price : customerSort === 'price-high' ? b.price - a.price : b.id - a.id);
-=======
-    const allCategoryTabs = ['ทั้งหมด', ...uniqueCategories];
-
-    const filteredProductsForCustomer = products.filter(p => {
-        const matchesCategory = customerCategory === 'ทั้งหมด' || p.category === customerCategory;
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
     const filteredProductsForSeller = products.filter(p => {
         const matchesCategory = sellerCategory === 'ทั้งหมด' || p.category === sellerCategory;
@@ -252,16 +153,8 @@ export function useAppState() {
         return matchesSearch && matchesDateRange;
     });
 
-<<<<<<< HEAD
     const [coupons, setCoupons] = useState([]);
     const couponRules = Object.fromEntries(coupons.map((coupon) => [coupon.code, { code: coupon.code, label: coupon.label, type: coupon.type, value: coupon.value, minimumOrder: coupon.minimum_order, expiresAt: coupon.expires_at, usageLimit: coupon.usage_limit, usedCount: coupon.used_count }]));
-=======
-    const couponRules = {
-        SAVE10: { code: 'SAVE10', label: 'ส่วนลด 10%', type: 'percent', value: 10 },
-        SAVE15: { code: 'SAVE15', label: 'ส่วนลด 15%', type: 'percent', value: 15 },
-        FREESHIP: { code: 'FREESHIP', label: 'ค่าจัดส่งฟรี', type: 'shipping', value: 0 }
-    };
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
     const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const discountAmount = appliedCoupon?.type === 'percent'
@@ -276,7 +169,6 @@ export function useAppState() {
         totalOrders: orders.length,
         totalSales: orders.reduce((sum, order) => sum + (order.total || 0), 0)
     };
-<<<<<<< HEAD
     const sellerSalesByDay = Array.from({ length: 7 }, (_, index) => {
         const date = new Date(); date.setDate(date.getDate() - (6 - index));
         const dayKey = date.toLocaleDateString('en-CA');
@@ -286,17 +178,10 @@ export function useAppState() {
     const customerOrders = orders.filter(order => {
         if (currentUser?.id) {
             return order.username === currentUser.id;
-=======
-
-    const customerOrders = orders.filter(order => {
-        if (currentUser?.username) {
-            return order.username === currentUser.username;
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         }
         return order.username === 'guest' || order.buyer === userProfile.displayName;
     });
 
-<<<<<<< HEAD
     // --- Supabase data loading ---
     const toProduct = (product) => ({
         ...product,
@@ -367,37 +252,6 @@ export function useAppState() {
         });
         return () => subscription.unsubscribe();
     }, []);
-=======
-    // --- Effects ---
-    useEffect(() => {
-        if (!currentUser?.username) {
-            const resetProfile = { ...DEFAULT_PROFILE };
-            setUserProfile(resetProfile);
-            setSettingsForm(resetProfile);
-            setCheckoutName(resetProfile.displayName);
-            setCheckoutPhone(resetProfile.phone);
-            setCheckoutAddress(resetProfile.address);
-            setCheckoutPayment(resetProfile.defaultPayment);
-            return;
-        }
-
-        const profile = getStoredProfile(currentUser.username);
-        setUserProfile(profile);
-        setSettingsForm({ ...profile });
-        setCheckoutName(profile.displayName);
-        setCheckoutPhone(profile.phone);
-        setCheckoutAddress(profile.address);
-        setCheckoutPayment(profile.defaultPayment);
-    }, [currentUser?.username, setUserProfile]);
-
-    useEffect(() => {
-        setSettingsForm({ ...userProfile });
-        setCheckoutName(userProfile.displayName);
-        setCheckoutPhone(userProfile.phone);
-        setCheckoutAddress(userProfile.address);
-        setCheckoutPayment(userProfile.defaultPayment);
-    }, [userProfile]);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
 
     useEffect(() => {
         if (viewMode !== 'seller') {
@@ -415,11 +269,7 @@ export function useAppState() {
 
         if (!isAdminUser) {
             setViewMode('customer');
-<<<<<<< HEAD
             showAlert('จำกัดสิทธิ์', 'กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับสิทธิ์ผู้ดูแลระบบ');
-=======
-            showAlert('จำกัดสิทธิ์', 'ต้องล็อกอินด้วยบัญชี Rin หรืออีเมล Rin และรหัสผ่าน 1234 เพื่อเข้าใช้งานหน้าจัดการระบบ');
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         }
     }, [currentUser?.username, currentUser?.isAdmin, viewMode]);
 
@@ -490,7 +340,6 @@ export function useAppState() {
         showAlert('ลบคูปองแล้ว', 'โค้ดส่วนลดถูกลบออกจากคำสั่งซื้อนี้แล้ว');
     };
 
-<<<<<<< HEAD
     const toggleFavorite = async (productId) => {
         if (!supabase || !currentUser?.id) { showAlert('กรุณาเข้าสู่ระบบ', 'เข้าสู่ระบบเพื่อบันทึกรายการโปรดของคุณ'); return; }
         const isFavorite = favoriteProductIds.includes(productId);
@@ -527,24 +376,12 @@ export function useAppState() {
     };
 
     const handleCreateAdmin = async (e) => {
-=======
-    const findAdditionalAdmin = (value, password) => {
-        const normalized = String(value || '').trim().toLowerCase();
-        return adminAccounts.find((account) => (
-            account.username.toLowerCase() === normalized
-            && account.password === String(password || '')
-        ));
-    };
-
-    const handleCreateAdmin = (e) => {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         e.preventDefault();
         if (currentUser?.isAdmin !== true) {
             showAlert('ไม่มีสิทธิ์', 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถเพิ่มบัญชีผู้ดูแลได้');
             return;
         }
 
-<<<<<<< HEAD
         const username = newAdminUsername.trim().toLowerCase();
         const password = newAdminPassword;
         if (!username.includes('@') || password.length < 6) {
@@ -556,34 +393,6 @@ export function useAppState() {
         setNewAdminUsername('');
         setNewAdminPassword('');
         await loadAccount({ id: currentUser.id, email: currentUser.email });
-=======
-        const username = newAdminUsername.trim();
-        const password = newAdminPassword;
-        const normalizedUsername = username.toLowerCase();
-        if (username.length < 3 || password.length < 4) {
-            showAlert('ข้อมูลไม่ครบถ้วน', 'ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร และรหัสผ่านอย่างน้อย 4 ตัวอักษร');
-            return;
-        }
-        if (normalizedUsername === SPECIAL_ADMIN_USERNAME.toLowerCase() || normalizedUsername === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-            showAlert('ชื่อผู้ใช้สงวนไว้', 'ชื่อผู้ใช้นี้เป็นบัญชีผู้ดูแลหลักของระบบ');
-            return;
-        }
-        if (adminAccounts.some((account) => account.username.toLowerCase() === normalizedUsername) || localStorage.getItem(`user_db_${username}`)) {
-            showAlert('ไม่สามารถเพิ่มบัญชีได้', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่ออื่น');
-            return;
-        }
-
-        const profile = {
-            ...DEFAULT_PROFILE,
-            displayName: username,
-            email: `${username}@example.com`
-        };
-        setAdminAccounts((accounts) => [...accounts, { username, password }]);
-        localStorage.setItem(`user_db_${username}`, password);
-        saveUserProfile(username, profile);
-        setNewAdminUsername('');
-        setNewAdminPassword('');
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         showAlert('เพิ่มผู้ดูแลสำเร็จ', `บัญชี "${username}" สามารถเข้าสู่หน้าแดชบอร์ดได้แล้ว`);
     };
 
@@ -600,34 +409,22 @@ export function useAppState() {
         showConfirm(
             'ยืนยันการลบบัญชีผู้ดูแล',
             `คุณต้องการลบบัญชีผู้ดูแล "${username}" ใช่หรือไม่? บัญชีนี้จะไม่สามารถเข้าสู่แดชบอร์ดได้อีก`,
-<<<<<<< HEAD
             async () => {
                 const { error } = await supabase.functions.invoke('delete-admin', { body: { username } });
                 if (error) { showAlert('ลบบัญชีไม่สำเร็จ', error.message); return; }
                 await loadAccount({ id: currentUser.id, email: currentUser.email });
-=======
-            () => {
-                setAdminAccounts((accounts) => accounts.filter((account) => account.username !== username));
-                localStorage.removeItem(`user_db_${username}`);
-                localStorage.removeItem(`fashion_profile_${username}`);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                 showAlert('ลบบัญชีสำเร็จ', `ลบบัญชีผู้ดูแล "${username}" เรียบร้อยแล้ว`);
             }
         );
     };
 
     // --- Auth ---
-<<<<<<< HEAD
     const handleAuthSubmit = async (e) => {
-=======
-    const handleAuthSubmit = (e) => {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         e.preventDefault();
         if (!usernameInput || !passwordInput) {
             showAlert('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบถ้วนด้วยนะครับ');
             return;
         }
-<<<<<<< HEAD
         if (!supabase) { showAlert('ยังไม่ได้เชื่อมฐานข้อมูล', 'กรุณาตั้งค่า VITE_SUPABASE_URL และ VITE_SUPABASE_ANON_KEY ก่อนใช้งาน'); return; }
         const email = usernameInput.trim().toLowerCase();
         const result = authMode === 'signup'
@@ -637,106 +434,13 @@ export function useAppState() {
         setIsAuthOpen(false); setUsernameInput(''); setPasswordInput(''); setAuthMode('login');
         if (authMode === 'signup' && !result.data.session) showAlert('ตรวจสอบอีเมลของคุณ', 'เราได้ส่งลิงก์ยืนยันบัญชีไปยังอีเมลแล้ว');
         else showAlert(authMode === 'signup' ? 'สมัครสมาชิกสำเร็จ' : 'เข้าสู่ระบบสำเร็จ', 'บัญชีของคุณเชื่อมกับระบบกลางเรียบร้อยแล้ว');
-=======
-
-        if (authMode === 'signup') {
-            const normalizedUsername = usernameInput.trim().toLowerCase();
-            if (normalizedUsername === SPECIAL_ADMIN_USERNAME.toLowerCase() || normalizedUsername === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-                showAlert('ชื่อผู้ใช้สงวนไว้', 'ชื่อผู้ใช้นี้สงวนไว้สำหรับผู้ดูแลระบบ กรุณาเลือกชื่อผู้ใช้อื่น');
-                return;
-            }
-            if (localStorage.getItem(`user_db_${usernameInput.trim()}`)) {
-                showAlert('ไม่สามารถสมัครได้', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่ออื่น');
-                return;
-            }
-            localStorage.setItem(`user_db_${usernameInput}`, passwordInput);
-            const newProfile = {
-                ...DEFAULT_PROFILE,
-                displayName: usernameInput,
-                email: `${usernameInput}@example.com`
-            };
-            saveUserProfile(usernameInput, newProfile);
-            setCustomerAccounts((accounts) => {
-                const normalizedUsername = usernameInput.trim().toLowerCase();
-                const withoutExisting = accounts.filter((account) => account.username.toLowerCase() !== normalizedUsername);
-                return [...withoutExisting, {
-                    username: usernameInput,
-                    displayName: newProfile.displayName,
-                    email: newProfile.email
-                }];
-            });
-            setCurrentUser({ username: usernameInput });
-            setUserProfile(newProfile);
-            setSettingsForm({ ...newProfile });
-            setCheckoutName(newProfile.displayName);
-            setCheckoutPhone(newProfile.phone);
-            setCheckoutAddress(newProfile.address);
-            setCheckoutPayment(newProfile.defaultPayment);
-            setIsAuthOpen(false);
-            setUsernameInput('');
-            setPasswordInput('');
-            setAuthMode('login');
-            showAlert('สมัครสมาชิกสำเร็จ', 'บัญชีจำลองพร้อมใช้งานแล้วครับ!');
-        } else {
-            const additionalAdmin = findAdditionalAdmin(usernameInput, passwordInput);
-            if (isSpecialAdminCredential(usernameInput, passwordInput) || additionalAdmin) {
-                const isPrimaryAdmin = !additionalAdmin;
-                const adminUsername = isPrimaryAdmin ? SPECIAL_ADMIN_USERNAME : additionalAdmin.username;
-                const adminProfile = isPrimaryAdmin
-                    ? getSpecialAdminProfile()
-                    : getStoredProfile(adminUsername);
-                if (isPrimaryAdmin) {
-                    localStorage.setItem(`user_db_${SPECIAL_ADMIN_USERNAME}`, SPECIAL_ADMIN_PASSWORD);
-                    saveUserProfile(SPECIAL_ADMIN_USERNAME, adminProfile);
-                }
-                setCurrentUser({ username: adminUsername, isAdmin: true, email: adminProfile.email });
-                setUserProfile(adminProfile);
-                setSettingsForm({ ...adminProfile });
-                setCheckoutName(adminProfile.displayName);
-                setCheckoutPhone(adminProfile.phone);
-                setCheckoutAddress(adminProfile.address);
-                setCheckoutPayment(adminProfile.defaultPayment);
-                setViewMode('seller');
-                setIsOrderViewOpen(false);
-                setIsAuthOpen(false);
-                setUsernameInput('');
-                setPasswordInput('');
-                setAuthMode('login');
-                showAlert('เข้าสู่ระบบสำเร็จ', `ยินดีต้อนรับกลับมาครับ คุณ ${adminUsername}!`);
-                return;
-            }
-
-            const savedPassword = localStorage.getItem(`user_db_${usernameInput}`);
-            if (savedPassword && savedPassword === passwordInput) {
-                const profile = getStoredProfile(usernameInput);
-                setCurrentUser({ username: usernameInput });
-                setUserProfile(profile);
-                setSettingsForm({ ...profile });
-                setCheckoutName(profile.displayName);
-                setCheckoutPhone(profile.phone);
-                setCheckoutAddress(profile.address);
-                setCheckoutPayment(profile.defaultPayment);
-                setViewMode('customer');
-                setIsAuthOpen(false);
-                setUsernameInput('');
-                setPasswordInput('');
-                setAuthMode('login');
-                showAlert('เข้าสู่ระบบสำเร็จ', `ยินดีต้อนรับกลับมาครับ คุณ ${usernameInput}!`);
-            } else {
-                showAlert('เข้าสู่ระบบไม่สำเร็จ', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-            }
-        }
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     };
 
     const handleLogout = () => {
         showConfirm('ยืนยันการออกจากระบบ', 'คุณต้องการออกจากระบบสมาชิกใช่หรือไม่?', () => {
             setCurrentUser(null);
             setViewMode('customer');
-<<<<<<< HEAD
             supabase?.auth.signOut();
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             showAlert('ออกจากระบบแล้ว', 'ระบบตัดการเชื่อมต่อเรียบร้อยครับ');
         });
     };
@@ -752,11 +456,7 @@ export function useAppState() {
         if (!currentUser?.username) {
             setAuthMode('login');
             setIsAuthOpen(true);
-<<<<<<< HEAD
             showAlert('จำกัดสิทธิ์', 'กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับสิทธิ์ผู้ดูแลระบบ');
-=======
-            showAlert('จำกัดสิทธิ์', 'ต้องล็อกอินด้วยบัญชี Rin หรืออีเมล Rin และรหัสผ่าน 1234 เพื่อเข้าใช้งานหน้าจัดการระบบ');
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             return;
         }
 
@@ -770,7 +470,6 @@ export function useAppState() {
 
         setAuthMode('login');
         setIsAuthOpen(true);
-<<<<<<< HEAD
         showAlert('จำกัดสิทธิ์', 'บัญชีนี้ยังไม่ได้รับสิทธิ์ผู้ดูแลระบบ');
     };
 
@@ -788,39 +487,19 @@ export function useAppState() {
 
         const availableStock = selectedVariant?.stock ?? currentInStore?.stock;
         if (!currentInStore || availableStock < currentCartQty + requestedQty) {
-=======
-        showAlert('จำกัดสิทธิ์', 'ต้องล็อกอินด้วยบัญชี Rin หรืออีเมล Rin และรหัสผ่าน 1234 เพื่อเข้าใช้งานหน้าจัดการระบบ');
-    };
-
-    // --- Customer Functions ---
-    const addToCart = (product, quantity = 1) => {
-        const currentInStore = products.find(p => p.id === product.id);
-        const inCart = cart.find(item => item.id === product.id);
-        const currentCartQty = inCart ? inCart.qty : 0;
-        const requestedQty = Math.max(1, Number(quantity) || 1);
-
-        if (!currentInStore || currentInStore.stock < currentCartQty + requestedQty) {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             showAlert('สินค้าหมดคลัง', `ขออภัยครับ สินค้า "${product.name}" ในคลังหมดแล้ว`);
             return;
         }
 
         if (inCart) {
-<<<<<<< HEAD
             setCart(cart.map(item => getCartKey(item) === cartKey ? { ...inCart, cartKey, size: selectedSize, variantId: resolvedVariantId, qty: inCart.qty + requestedQty } : item));
         } else {
             setCart([...cart, { ...product, size: selectedSize, variantId: resolvedVariantId, cartKey, qty: requestedQty }]);
-=======
-            setCart(cart.map(item => item.id === product.id ? { ...inCart, qty: inCart.qty + requestedQty } : item));
-        } else {
-            setCart([...cart, { ...product, qty: requestedQty }]);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         }
         showAlert('สำเร็จ!', `เพิ่ม "${product.name}" จำนวน ${requestedQty} ชิ้นลงในตะกร้าแล้ว`);
     };
 
     const removeFromCart = (product) => {
-<<<<<<< HEAD
         const cartKey = product.cartKey || `${product.id}:${product.variantId || product.size || product.sizes?.[0] || 'One size'}`;
         const getCartKey = (item) => item.cartKey || `${item.id}:${item.size || item.sizes?.[0] || 'One size'}`;
         const exist = cart.find(item => getCartKey(item) === cartKey);
@@ -832,17 +511,6 @@ export function useAppState() {
     };
 
     const handleCheckout = async () => {
-=======
-        const exist = cart.find(item => item.id === product.id);
-        if (!exist || exist.qty === 1) {
-            setCart(cart.filter(item => item.id !== product.id));
-        } else {
-            setCart(cart.map(item => item.id === product.id ? { ...exist, qty: exist.qty - 1 } : item));
-        }
-    };
-
-    const handleCheckout = () => {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         if (!checkoutName.trim() || !checkoutPhone.trim() || !checkoutAddress.trim()) {
             showAlert('ข้อมูลส่งของไม่ครบ', 'กรุณากรอกชื่อ เบอร์โทร และที่อยู่จัดส่งให้ครบถ้วนก่อนการชำระเงินนะครับ');
             return;
@@ -853,12 +521,8 @@ export function useAppState() {
 
         for (const item of cart) {
             const currentInStore = products.find(p => p.id === item.id);
-<<<<<<< HEAD
             const variant = currentInStore?.variants?.find((entry) => entry.id === item.variantId);
             if (!currentInStore || (variant?.stock ?? currentInStore.stock) < item.qty) {
-=======
-            if (!currentInStore || currentInStore.stock < item.qty) {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                 canCheckout = false;
                 outOfStockItemName = item.name;
                 break;
@@ -870,14 +534,6 @@ export function useAppState() {
             return;
         }
 
-<<<<<<< HEAD
-=======
-        const updatedProducts = products.map(p => {
-            const cartItem = cart.find(item => item.id === p.id);
-            return cartItem ? { ...p, stock: Math.max(0, p.stock - cartItem.qty) } : p;
-        });
-
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         const subtotal = cartSubtotal;
         const discountValue = discountAmount;
         const shippingValue = shippingFee;
@@ -887,11 +543,7 @@ export function useAppState() {
             date: new Date().toLocaleDateString('th-TH'),
             time: new Date().toLocaleTimeString('th-TH'),
             buyer: checkoutName.trim(),
-<<<<<<< HEAD
             username: currentUser?.id,
-=======
-            username: currentUser?.username || 'guest',
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             contact: checkoutPhone,
             address: checkoutAddress,
             payment: checkoutPayment === 'bank' ? 'โอนเงินธนาคาร' : checkoutPayment === 'card' ? 'บัตรเครดิต/เดบิต' : 'TrueMoney Wallet',
@@ -904,7 +556,6 @@ export function useAppState() {
             total: finalTotal
         };
 
-<<<<<<< HEAD
         if (!supabase || !currentUser?.id) {
             showAlert('กรุณาเข้าสู่ระบบ', 'ต้องเข้าสู่ระบบก่อนจึงจะสั่งซื้อและบันทึกข้อมูลข้ามเครื่องได้');
             return;
@@ -912,10 +563,6 @@ export function useAppState() {
         const { error } = await supabase.rpc('create_order', { payload: newOrder });
         if (error) { showAlert('ชำระเงินไม่สำเร็จ', error.message); return; }
         await refreshStore();
-=======
-        setOrders(prev => [newOrder, ...prev]);
-        setProducts(updatedProducts);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         showAlert(
             'การชำระเงินจำลองเสร็จสมบูรณ์!',
             `ยอดชำระ ฿${finalTotal.toLocaleString()} บันทึกออเดอร์ในนามคุณ "${checkoutName.trim()}" เรียบร้อย!`
@@ -928,7 +575,6 @@ export function useAppState() {
     };
 
     // --- Seller Functions ---
-<<<<<<< HEAD
     const adjustStock = async (id, amount, variantId = null) => {
         const product = products.find((item) => item.id === id);
         if (!product || !supabase) return;
@@ -943,28 +589,19 @@ export function useAppState() {
             if (error) { showAlert('อัปเดตสต็อกไม่สำเร็จ', error.message); return; }
         }
         await refreshStore();
-=======
-    const adjustStock = (id, amount) => {
-        setProducts(products.map(p => p.id === id ? { ...p, stock: Math.max(0, p.stock + amount) } : p));
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
     };
 
     const handleDeleteProduct = (id, name) => {
         showConfirm('ยืนยันการถอดสินค้า', `คุณต้องการลบสินค้า "${name}" ออกจากระบบใช่หรือไม่?`, () => {
-<<<<<<< HEAD
             supabase?.from('products').delete().eq('id', id).then(async ({ error }) => {
                 if (error) { showAlert('ลบสินค้าไม่สำเร็จ', error.message); return; }
                 await refreshStore();
             });
-=======
-            setProducts(products.filter(p => p.id !== id));
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             setCart(cart.filter(item => item.id !== id));
             showAlert('สำเร็จ', `ถอดสินค้าเรียบร้อยแล้ว`);
         });
     };
 
-<<<<<<< HEAD
     const parseVariantStocks = (sizesInput, stocksInput, fallbackStock = 0) => {
         const sizes = String(sizesInput || 'One size').split(',').map((size) => size.trim()).filter(Boolean);
         const stockBySize = Object.fromEntries(String(stocksInput || '').split(',').map((entry) => entry.trim()).filter(Boolean).map((entry) => {
@@ -986,11 +623,6 @@ export function useAppState() {
     const handleAddProduct = async (e) => {
         e.preventDefault();
         if (!newProduct.name.trim() || newProduct.price === '') {
-=======
-    const handleAddProduct = async (e) => {
-        e.preventDefault();
-        if (!newProduct.name.trim() || newProduct.price === '' || newProduct.stock === '') {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             showAlert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลหลักให้ครบถ้วนด้วยครับ');
             return;
         }
@@ -1008,22 +640,15 @@ export function useAppState() {
         const fileInput = document.getElementById('newProductImage');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             try {
-<<<<<<< HEAD
                 finalImage = await uploadProductImage(fileInput.files[0], finalImage);
             } catch (error) {
                 showAlert('อัปโหลดรูปไม่สำเร็จ', error.message);
                 return;
-=======
-                finalImage = await convertFileToBase64(fileInput.files[0]);
-            } catch (error) {
-                console.error('Error converting image:', error);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             }
         } else if (newProduct.img) {
             finalImage = newProduct.img;
         }
 
-<<<<<<< HEAD
         const variants = parseVariantStocks(newProduct.sizes, newProduct.variantStocks, newProduct.stock);
         const createdProduct = {
             name: newProduct.name,
@@ -1040,30 +665,13 @@ export function useAppState() {
         if (variantError) { showAlert('เพิ่มไซซ์ไม่สำเร็จ', variantError.message); return; }
         await refreshStore();
         setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '', description: '', sizes: 'S, M, L, XL', variantStocks: 'S: 0, M: 0, L: 0, XL: 0' });
-=======
-        const createdProduct = {
-            id: Date.now(),
-            name: newProduct.name,
-            price: Number(newProduct.price),
-            category: finalCategory,
-            img: finalImage,
-            stock: Number(newProduct.stock)
-        };
-
-        setProducts([createdProduct, ...products]);
-        setNewProduct({ name: '', price: '', category: 'เสื้อผ้า', img: '', stock: '' });
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         setCustomCategoryInput('');
         setNewProductImagePreview('');
         showAlert('สำเร็จ!', `เพิ่มสินค้าใหม่ในหมวดหมู่ "${finalCategory}" แล้ว`);
     };
 
     const startEditingProduct = (product) => {
-<<<<<<< HEAD
         setEditingProduct({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes || '', variantStocks: (product.variants || []).map((variant) => `${variant.size}: ${variant.stock}`).join(', ') });
-=======
-        setEditingProduct({ ...product });
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         setEditCategoryInput('');
         setEditProductImagePreview(product.img);
     };
@@ -1088,7 +696,6 @@ export function useAppState() {
         const fileInput = document.getElementById('editProductImage');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             try {
-<<<<<<< HEAD
                 finalImage = await uploadProductImage(fileInput.files[0], finalImage);
             } catch (error) {
                 showAlert('อัปโหลดรูปไม่สำเร็จ', error.message);
@@ -1112,29 +719,6 @@ export function useAppState() {
         const { error: variantError } = await supabase.from('product_variants').insert(variants.map((variant) => ({ ...variant, product_id: editingProduct.id })));
         if (variantError) { showAlert('อัปเดตไซซ์ไม่สำเร็จ', variantError.message); return; }
         await refreshStore();
-=======
-                finalImage = await convertFileToBase64(fileInput.files[0]);
-            } catch (error) {
-                console.error('Error converting image:', error);
-            }
-        }
-
-        const updatedProducts = products.map(p => {
-            if (p.id === editingProduct.id) {
-                return {
-                    ...p,
-                    name: editingProduct.name,
-                    price: Number(editingProduct.price),
-                    stock: Number(editingProduct.stock),
-                    category: finalCategory,
-                    img: finalImage
-                };
-            }
-            return p;
-        });
-
-        setProducts(updatedProducts);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         setEditingProduct(null);
         setEditProductImagePreview('');
         showAlert('สำเร็จ!', `อัปเดตข้อมูลสินค้าเรียบร้อยแล้วครับ`);
@@ -1142,14 +726,10 @@ export function useAppState() {
 
     const handleClearOrders = () => {
         showConfirm('ยืนยันการล้างข้อมูล', 'คุณต้องการเคลียร์ประวัติใบออเดอร์ลูกค้าทั้งหมดในระบบใช่หรือไม่?', () => {
-<<<<<<< HEAD
             supabase?.from('orders').delete().neq('id', '').then(async ({ error }) => {
                 if (error) { showAlert('ล้างออเดอร์ไม่สำเร็จ', error.message); return; }
                 await refreshStore();
             });
-=======
-            setOrders([]);
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
             showAlert('สำเร็จ', 'ล้างข้อมูลออเดอร์เรียบร้อยแล้ว');
         });
     };
@@ -1159,21 +739,16 @@ export function useAppState() {
             'ยืนยันการเคลียร์ออเดอร์',
             `คุณต้องการลบคำสั่งซื้อหมายเลข ${orderId} ของคุณ ${buyer} ออกจากระบบใช่หรือไม่?`,
             () => {
-<<<<<<< HEAD
                 supabase?.from('orders').delete().eq('order_number', orderId).then(async ({ error }) => {
                     if (error) { showAlert('ลบออเดอร์ไม่สำเร็จ', error.message); return; }
                     await refreshStore();
                 });
-=======
-                setOrders(orders.filter(order => order.orderId !== orderId));
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
                 showAlert('สำเร็จ', `เคลียร์คำสั่งซื้อ ${orderId} เรียบร้อยแล้วครับ`);
             }
         );
     };
 
     // --- Settings ---
-<<<<<<< HEAD
     const handleSaveSettings = async (e) => {
         e.preventDefault();
         const nextProfile = { ...settingsForm };
@@ -1188,53 +763,17 @@ export function useAppState() {
     };
 
     const handleChangePassword = async (e) => {
-=======
-    const handleSaveSettings = (e) => {
-        e.preventDefault();
-        const nextProfile = { ...settingsForm };
-        setUserProfile(nextProfile);
-        if (currentUser?.username) {
-            saveUserProfile(currentUser.username, nextProfile);
-        }
-        showAlert('บันทึกสำเร็จ!', 'อัปเดตข้อมูลบัญชีผู้ใช้งานของคุณเรียบร้อยแล้วครับ');
-    };
-
-    const handleChangePassword = (e) => {
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         e.preventDefault();
         if (!currentUser) {
             showAlert('แจ้งเตือน', 'คุณต้องล็อกอินด้วยบัญชีสมาชิกก่อนเปลี่ยนรหัสผ่านครับ');
             return;
         }
-<<<<<<< HEAD
-=======
-        if (currentUser.isAdmin && currentUser.username.toLowerCase() === SPECIAL_ADMIN_USERNAME.toLowerCase()) {
-            showAlert('ไม่สามารถเปลี่ยนรหัสผ่านได้', 'บัญชีผู้ดูแลหลักใช้รหัสผ่านที่กำหนดไว้สำหรับระบบจำลอง');
-            return;
-        }
-        const realPassword = localStorage.getItem(`user_db_${currentUser.username}`);
-        if (oldPassword !== realPassword) {
-            showAlert('เกิดข้อผิดพลาด', 'รหัสผ่านปัจจุบันไม่ถูกต้องครับ');
-            return;
-        }
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         if (!newPassword || newPassword.length < 4) {
             showAlert('เกิดข้อผิดพลาด', 'กรุณาระบุรหัสผ่านใหม่ที่มีความยาวอย่างน้อย 4 ตัวอักษร');
             return;
         }
-<<<<<<< HEAD
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) { showAlert('เปลี่ยนรหัสผ่านไม่สำเร็จ', error.message); return; }
-=======
-        localStorage.setItem(`user_db_${currentUser.username}`, newPassword);
-        if (currentUser.isAdmin) {
-            setAdminAccounts((accounts) => accounts.map((account) => (
-                account.username.toLowerCase() === currentUser.username.toLowerCase()
-                    ? { ...account, password: newPassword }
-                    : account
-            )));
-        }
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         setOldPassword('');
         setNewPassword('');
         showAlert('เปลี่ยนรหัสผ่านแล้ว!', 'ระบบจำลองบันทึกรหัสผ่านใหม่ของคุณเรียบร้อยแล้วครับ');
@@ -1254,14 +793,11 @@ export function useAppState() {
         usernameInput, setUsernameInput,
         passwordInput, setPasswordInput,
         customerCategory, setCustomerCategory,
-<<<<<<< HEAD
         selectedProduct, setSelectedProduct,
         customerPriceRange, setCustomerPriceRange,
         customerInStockOnly, setCustomerInStockOnly,
         customerSort, setCustomerSort,
         favoriteProductIds,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         isCartOpen, setIsCartOpen,
         checkoutName, setCheckoutName,
         checkoutPhone, setCheckoutPhone,
@@ -1281,11 +817,8 @@ export function useAppState() {
         isAddProductViewOpen, setIsAddProductViewOpen,
         isInventoryViewOpen, setIsInventoryViewOpen,
         isAdminManagementViewOpen, setIsAdminManagementViewOpen,
-<<<<<<< HEAD
         isCouponManagementViewOpen, setIsCouponManagementViewOpen,
         newCoupon, setNewCoupon,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         orderDateFilter, setOrderDateFilter,
         orderDateFrom, setOrderDateFrom,
         orderDateTo, setOrderDateTo,
@@ -1305,21 +838,15 @@ export function useAppState() {
         filteredCustomerAccounts,
         filteredOrders,
         sellerStats,
-<<<<<<< HEAD
         sellerSalesByDay,
         coupons,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         showAlert,
         showConfirm,
         closeNotification,
         clearAllFilters,
         applyCoupon,
         removeCoupon,
-<<<<<<< HEAD
         toggleFavorite,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         customerOrders,
         handleSellerAccess,
         handleAuthSubmit,
@@ -1335,12 +862,9 @@ export function useAppState() {
         handleSaveEditProduct,
         handleClearOrders,
         handleDeleteSingleOrder,
-<<<<<<< HEAD
         updateOrderStatus,
         handleCreateCoupon,
         toggleCoupon,
-=======
->>>>>>> a9cd2f35ff6b348f243e459dcd25956bc61b0465
         handleCreateAdmin,
         handleDeleteAdmin,
         handleSaveSettings,
